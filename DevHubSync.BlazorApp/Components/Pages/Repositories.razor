@@ -6,43 +6,61 @@
 @inject IDevOpsService DevOpsService
 @inject IGitHubService GitHubService
 @inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
 <PageTitle>Repositories</PageTitle>
 
 <MudText Typo="Typo.h3" GutterBottom="true">Repository Management</MudText>
+<MudText Typo="Typo.subtitle1" Color="Color.Secondary">Enable sync on repositories to allow synchronization between DevOps and GitHub</MudText>
 
 <MudGrid Class="mb-4">
-    <MudItem xs="12" md="4">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="PopulateDevOpsProjects" Disabled="isLoading">
-            <MudIcon Icon="@Icons.Custom.Brands.MicrosoftAzure" Class="mr-2" />
-            @if (isPopulatingDevOps)
-            {
-                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                <MudText Class="ms-2">Loading DevOps...</MudText>
-            }
-            else
-            {
-                <MudText>Sync DevOps Projects</MudText>
-            }
-        </MudButton>
-    </MudItem>
-    <MudItem xs="12" md="4">
-        <MudTextField @bind-Value="gitHubOwner" Label="GitHub Owner" Variant="Variant.Outlined" />
-    </MudItem>
-    <MudItem xs="12" md="4">
-        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="PopulateGitHubRepositories" Disabled="isLoading">
-            <MudIcon Icon="@Icons.Custom.Brands.GitHub" Class="mr-2" />
-            @if (isPopulatingGitHub)
-            {
-                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                <MudText Class="ms-2">Loading GitHub...</MudText>
-            }
-            else
-            {
-                <MudText>Sync GitHub Repos</MudText>
-            }
-        </MudButton>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.h6">
+                                <MudIcon Icon="@Icons.Custom.Brands.MicrosoftAzure" Class="mr-2" Color="Color.Primary" />
+                                DevOps Integration
+                            </MudText>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="PopulateDevOpsProjects" Disabled="isLoading" FullWidth="true">
+                                @if (isPopulatingDevOps)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    <MudText Class="ms-2">Loading DevOps...</MudText>
+                                }
+                                else
+                                {
+                                    <MudText>Import DevOps Projects & Repositories</MudText>
+                                }
+                            </MudButton>
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.h6">
+                                <MudIcon Icon="@Icons.Custom.Brands.GitHub" Class="mr-2" Color="Color.Secondary" />
+                                GitHub Integration
+                            </MudText>
+                            <MudTextField @bind-Value="gitHubOwner" Label="GitHub Owner (optional)" Variant="Variant.Outlined" Immediate="true" />
+                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="PopulateGitHubRepositories" Disabled="isLoading" FullWidth="true">
+                                @if (isPopulatingGitHub)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    <MudText Class="ms-2">Loading GitHub...</MudText>
+                                }
+                                else
+                                {
+                                    <MudText>Import GitHub Repositories</MudText>
+                                }
+                            </MudButton>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
     </MudItem>
 </MudGrid>
 
@@ -50,10 +68,29 @@
              SortMode="SortMode.Single" Hideable="true" ShowColumnOptions="true" Groupable="true"
              RowsPerPage="10" Class="mt-4" Height="600px"
              GroupClass="@(customizeGroupStyle ? "pa-4" : null)"
-             GroupStyle="@(customizeGroupStyle ? "background-color: var(--mud-palette-info-lighten);" : null)">
+             GroupStyle="@(customizeGroupStyle ? "background-color: var(--mud-palette-info-lighten);" : null)"
+             MultiSelection="true" @bind-SelectedItems="selectedRepositories"
+             RowStyleFunc="@((repo, index) => repo.SyncEnabled ? "background-color: var(--mud-palette-success-lighten);" : "")">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Repositories</MudText>
+        @if (selectedRepositories.Any())
+        {
+            <MudChip Color="Color.Primary" Size="Size.Small" Class="ml-2">
+                @selectedRepositories.Count selected
+            </MudChip>
+        }
         <MudSpacer />
+        @if (selectedRepositories.Any())
+        {
+            <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" Class="mr-2">
+                <MudButton OnClick="BulkEnableSync" StartIcon="@Icons.Material.Filled.CheckCircle" Color="Color.Success">
+                    Enable Sync
+                </MudButton>
+                <MudButton OnClick="BulkDisableSync" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Error">
+                    Disable Sync
+                </MudButton>
+            </MudButtonGroup>
+        }
         <MudTextField @bind-Value="searchString" Placeholder="Search repositories..." Adornment="Adornment.Start"
                       AdornmentIcon="Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true"
                       DebounceInterval="300" OnDebounceIntervalElapsed="OnSearch"></MudTextField>
@@ -156,9 +193,19 @@
         
         <TemplateColumn Title="Sync Enabled" Sortable="true" Filterable="false">
             <CellTemplate>
-                <MudSwitch T="bool" Value="context.Item.SyncEnabled" 
-                          ValueChanged="@(async (value) => await ToggleSyncEnabled(context.Item, value))" 
-                          Color="Color.Success" />
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                    <MudSwitch T="bool" Value="context.Item.SyncEnabled" 
+                              ValueChanged="@(async (value) => await ToggleSyncEnabled(context.Item, value))" 
+                              Color="Color.Success" />
+                    @if (context.Item.SyncEnabled)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.RadioButtonUnchecked" Color="Color.Default" Size="Size.Small" />
+                    }
+                </MudStack>
             </CellTemplate>
         </TemplateColumn>
         
@@ -197,9 +244,13 @@
                         <MudIcon Icon="@Icons.Material.Filled.Visibility" Class="mr-2" />
                         View Details
                     </MudMenuItem>
-                    <MudMenuItem OnClick="@(() => NavigateToSync(context.Item))">
-                        <MudIcon Icon="@Icons.Material.Filled.Sync" Class="mr-2" />
+                    <MudMenuItem OnClick="@(() => NavigateToSync(context.Item))" Disabled="@(!context.Item.SyncEnabled)">
+                        <MudIcon Icon="@Icons.Material.Filled.Sync" Class="mr-2" Color="@(context.Item.SyncEnabled ? Color.Default : Color.Default)" />
                         Start Sync
+                        @if (!context.Item.SyncEnabled)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Warning" Class="ml-2">(Enable sync first)</MudText>
+                        }
                     </MudMenuItem>
                     <MudDivider />
                     <MudMenuItem OnClick="@(() => DeleteRepository(context.Item))" 
@@ -217,21 +268,57 @@
     </PagerContent>
 </MudDataGrid>
 
-<MudStack Row Class="mt-3" AlignItems="AlignItems.Center">
-    <MudText Typo="Typo.h6">Grouping Controls:</MudText>
-    <MudButton Variant="Variant.Text" OnClick="ExpandAllGroups" StartIcon="@Icons.Material.Filled.ExpandMore">
-        Expand All
-    </MudButton>
-    <MudButton Variant="Variant.Text" OnClick="CollapseAllGroups" StartIcon="@Icons.Material.Filled.ExpandLess">
-        Collapse All
-    </MudButton>
-    <MudSwitch T="bool" @bind-Value="customizeGroupStyle" Label="Customize Group Style" Color="Color.Primary" />
-</MudStack>
+<MudGrid Class="mt-3">
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-2">Repository Statistics</MudText>
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.caption">Total Repositories</MudText>
+                        <MudText Typo="Typo.h5">@repositories.Count</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.caption" Color="Color.Success">Sync Enabled</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success">@repositories.Count(r => r.SyncEnabled)</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.caption" Color="Color.Primary">DevOps Repos</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Primary">@repositories.Count(r => r.Source == RepositorySource.DevOps)</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">GitHub Repos</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Secondary">@repositories.Count(r => r.Source == RepositorySource.GitHub)</MudText>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-2">Grouping Controls</MudText>
+                <MudStack>
+                    <MudStack Row AlignItems="AlignItems.Center">
+                        <MudButton Variant="Variant.Text" OnClick="ExpandAllGroups" StartIcon="@Icons.Material.Filled.ExpandMore">
+                            Expand All
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" OnClick="CollapseAllGroups" StartIcon="@Icons.Material.Filled.ExpandLess">
+                            Collapse All
+                        </MudButton>
+                    </MudStack>
+                    <MudSwitch T="bool" @bind-Value="customizeGroupStyle" Label="Customize Group Style" Color="Color.Primary" />
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
 
 @code {
     private MudDataGrid<RepositoryEntity> dataGrid = null!;
     private List<RepositoryEntity> repositories = new();
     private List<RepositoryEntity> filteredRepositories = new();
+    private HashSet<RepositoryEntity> selectedRepositories = new();
     private string searchString = string.Empty;
     private string gitHubOwner = string.Empty;
     private bool isLoading = false;
@@ -368,7 +455,19 @@
 
     private void NavigateToSync(RepositoryEntity repository)
     {
-        Snackbar.Add($"Navigate to sync page for {repository.Name} coming soon!", Severity.Info);
+        if (!repository.SyncEnabled)
+        {
+            Snackbar.Add("Please enable sync for this repository first", Severity.Warning);
+            return;
+        }
+        
+        // Store the selected repository information in a temporary service or use query parameters
+        var parameters = new Dictionary<string, object?>
+        {
+            ["preselectedRepo"] = repository
+        };
+        
+        NavigationManager.NavigateTo($"/sync?source={repository.Source}&repoId={repository.Id}");
     }
 
     private async Task DeleteRepository(RepositoryEntity repository)
@@ -390,6 +489,54 @@
         {
             Snackbar.Add($"Failed to delete repository: {ex.Message}", Severity.Error);
         }
+    }
+
+    private async Task BulkEnableSync()
+    {
+        if (!selectedRepositories.Any())
+        {
+            Snackbar.Add("No repositories selected", Severity.Warning);
+            return;
+        }
+        
+        int updatedCount = 0;
+        foreach (var repo in selectedRepositories)
+        {
+            if (!repo.SyncEnabled)
+            {
+                repo.SyncEnabled = true;
+                await SyncService.CreateOrUpdateRepositoryAsync(repo);
+                updatedCount++;
+            }
+        }
+        
+        Snackbar.Add($"Enabled sync for {updatedCount} repositories", Severity.Success);
+        selectedRepositories.Clear();
+        await RefreshData();
+    }
+
+    private async Task BulkDisableSync()
+    {
+        if (!selectedRepositories.Any())
+        {
+            Snackbar.Add("No repositories selected", Severity.Warning);
+            return;
+        }
+        
+        int updatedCount = 0;
+        foreach (var repo in selectedRepositories)
+        {
+            if (repo.SyncEnabled)
+            {
+                repo.SyncEnabled = false;
+                await SyncService.CreateOrUpdateRepositoryAsync(repo);
+                updatedCount++;
+            }
+        }
+        
+        Snackbar.Add($"Disabled sync for {updatedCount} repositories", Severity.Success);
+        selectedRepositories.Clear();
+        await RefreshData();
     }
 
     private Color GetSyncStatusColor(SyncStatus status) => status switch
