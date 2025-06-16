@@ -445,9 +445,10 @@ public class SyncService : ISyncService
 
     public async Task<GitHubUser> PopulateGitHubUserAsync(string username)
     {
-        // For now, create a basic user entry
-        // This could be enhanced to fetch actual user details from GitHub API
-        var user = new GitHubUser
+        // Fetch actual user details from GitHub API
+        var apiUser = await _gitHubService.GetUserAsync(username);
+        
+        var user = apiUser ?? new GitHubUser
         {
             Username = username,
             DisplayName = username,

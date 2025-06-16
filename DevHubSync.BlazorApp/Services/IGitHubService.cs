@@ -1,4 +1,5 @@
 using DevHubSync.BlazorApp.Models;
+using DevHubSync.BlazorApp.Data.Entities;
 
 namespace DevHubSync.BlazorApp.Services;
 
@@ -11,4 +12,6 @@ public interface IGitHubService
     Task<bool> TestConnectionAsync();
     Task<List<string>> GetBranchesAsync(string owner, string name);
     Task UploadRepositoryAsync(string owner, string name, byte[] zipContent, string branch, string commitMessage);
+    Task<GitHubUser?> GetUserAsync(string username);
+    Task<GitHubUser?> GetCurrentUserAsync();
 }

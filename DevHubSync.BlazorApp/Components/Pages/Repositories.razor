@@ -47,8 +47,10 @@
 </MudGrid>
 
 <MudDataGrid T="RepositoryEntity" @ref="dataGrid" Items="@repositories" Filterable="true" FilterMode="DataGridFilterMode.ColumnFilterRow" 
-             SortMode="SortMode.Single" Hideable="true" ShowColumnOptions="true" 
-             RowsPerPage="10" Class="mt-4">
+             SortMode="SortMode.Single" Hideable="true" ShowColumnOptions="true" Groupable="true"
+             RowsPerPage="10" Class="mt-4" Height="600px"
+             GroupClass="@(customizeGroupStyle ? "pa-4" : null)"
+             GroupStyle="@(customizeGroupStyle ? "background-color: var(--mud-palette-info-lighten);" : null)">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Repositories</MudText>
         <MudSpacer />
@@ -84,12 +86,26 @@
             </CellTemplate>
         </PropertyColumn>
         
-        <PropertyColumn Property="x => x.Source" Title="Source" Sortable="true" Filterable="true">
+        <PropertyColumn Property="x => x.Source" Title="Source" Sortable="true" Filterable="true"
+                        @bind-Grouping="sourceGrouping" @bind-GroupExpanded="sourceExpanded">
             <CellTemplate>
                 <MudChip T="string" Size="Size.Small" Color="@(context.Item.Source == RepositorySource.DevOps ? Color.Primary : Color.Secondary)">
                     @context.Item.Source
                 </MudChip>
             </CellTemplate>
+            <GroupTemplate>
+                <div class="d-flex align-center">
+                    <MudIcon Icon="@(context.Grouping.Key?.ToString() == "DevOps" ? Icons.Custom.Brands.MicrosoftAzure : Icons.Custom.Brands.GitHub)" 
+                             Color="@(context.Grouping.Key?.ToString() == "DevOps" ? Color.Primary : Color.Secondary)" 
+                             Size="Size.Small" Class="mr-2" />
+                    <span style="font-weight:bold">@context.Grouping.Key</span>
+                    <MudChip Variant="Variant.Outlined" 
+                             Color="@(context.Grouping.Key?.ToString() == "DevOps" ? Color.Primary : Color.Secondary)" 
+                             Size="Size.Small" Class="ml-2">
+                        @context.Grouping.Count() repositories
+                    </MudChip>
+                </div>
+            </GroupTemplate>
         </PropertyColumn>
         
         <TemplateColumn Title="Project/Owner" Sortable="false" Filterable="false">
@@ -146,12 +162,26 @@
             </CellTemplate>
         </TemplateColumn>
         
-        <PropertyColumn Property="x => x.SyncStatus" Title="Sync Status" Sortable="true" Filterable="true">
+        <PropertyColumn Property="x => x.SyncStatus" Title="Sync Status" Sortable="true" Filterable="true"
+                        @bind-Grouping="syncStatusGrouping" @bind-GroupExpanded="syncStatusExpanded">
             <CellTemplate>
                 <MudChip T="string" Size="Size.Small" Color="@GetSyncStatusColor(context.Item.SyncStatus)">
                     @context.Item.SyncStatus
                 </MudChip>
             </CellTemplate>
+            <GroupTemplate>
+                <div class="d-flex align-center">
+                    <MudIcon Icon="@GetSyncStatusIcon(context.Grouping.Key?.ToString())" 
+                             Color="@GetSyncStatusColor(Enum.Parse<SyncStatus>(context.Grouping.Key?.ToString() ?? "NotSynced"))" 
+                             Size="Size.Small" Class="mr-2" />
+                    <span style="font-weight:bold">@context.Grouping.Key</span>
+                    <MudChip Variant="Variant.Outlined" 
+                             Color="@GetSyncStatusColor(Enum.Parse<SyncStatus>(context.Grouping.Key?.ToString() ?? "NotSynced"))" 
+                             Size="Size.Small" Class="ml-2">
+                        @context.Grouping.Count() repositories
+                    </MudChip>
+                </div>
+            </GroupTemplate>
         </PropertyColumn>
         
         <TemplateColumn Title="Last Updated" Sortable="true" Filterable="false">
@@ -187,6 +217,17 @@
     </PagerContent>
 </MudDataGrid>
 
+<MudStack Row Class="mt-3" AlignItems="AlignItems.Center">
+    <MudText Typo="Typo.h6">Grouping Controls:</MudText>
+    <MudButton Variant="Variant.Text" OnClick="ExpandAllGroups" StartIcon="@Icons.Material.Filled.ExpandMore">
+        Expand All
+    </MudButton>
+    <MudButton Variant="Variant.Text" OnClick="CollapseAllGroups" StartIcon="@Icons.Material.Filled.ExpandLess">
+        Collapse All
+    </MudButton>
+    <MudSwitch T="bool" @bind-Value="customizeGroupStyle" Label="Customize Group Style" Color="Color.Primary" />
+</MudStack>
+
 @code {
     private MudDataGrid<RepositoryEntity> dataGrid = null!;
     private List<RepositoryEntity> repositories = new();
@@ -196,6 +237,13 @@
     private bool isLoading = false;
     private bool isPopulatingDevOps = false;
     private bool isPopulatingGitHub = false;
+    
+    // Grouping variables
+    private bool sourceGrouping = false;
+    private bool sourceExpanded = true;
+    private bool syncStatusGrouping = false;
+    private bool syncStatusExpanded = true;
+    private bool customizeGroupStyle = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -352,4 +400,27 @@
         SyncStatus.NotSynced => Color.Default,
         _ => Color.Default
     };
+
+    private string GetSyncStatusIcon(string? status) => status switch
+    {
+        "Synced" => Icons.Material.Filled.CheckCircle,
+        "Failed" => Icons.Material.Filled.Error,
+        "Syncing" => Icons.Material.Filled.Sync,
+        "NotSynced" => Icons.Material.Filled.RadioButtonUnchecked,
+        _ => Icons.Material.Filled.RadioButtonUnchecked
+    };
+
+    private void ExpandAllGroups()
+    {
+        sourceExpanded = true;
+        syncStatusExpanded = true;
+        StateHasChanged();
+    }
+
+    private void CollapseAllGroups()
+    {
+        sourceExpanded = false;
+        syncStatusExpanded = false;
+        StateHasChanged();
+    }
 }

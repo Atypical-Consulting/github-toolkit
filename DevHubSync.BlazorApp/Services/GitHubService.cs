@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using DevHubSync.BlazorApp.Models;
+using DevHubSync.BlazorApp.Data.Entities;
 using Octokit;
 
 namespace DevHubSync.BlazorApp.Services;
@@ -198,5 +199,49 @@ public class GitHubService : IGitHubService
         var commitResult = await _client.Git.Commit.Create(owner, name, newCommit);
         
         await _client.Git.Reference.Update(owner, name, $"heads/{branch}", new ReferenceUpdate(commitResult.Sha));
+    }
+
+    public async Task<GitHubUser?> GetUserAsync(string username)
+    {
+        EnsureClient();
+        
+        try
+        {
+            var user = await _client!.User.Get(username);
+            
+            return new GitHubUser
+            {
+                Username = user.Login,
+                DisplayName = user.Name ?? user.Login,
+                Email = user.Email ?? string.Empty,
+                AvatarUrl = user.AvatarUrl ?? string.Empty
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public async Task<GitHubUser?> GetCurrentUserAsync()
+    {
+        EnsureClient();
+        
+        try
+        {
+            var user = await _client!.User.Current();
+            
+            return new GitHubUser
+            {
+                Username = user.Login,
+                DisplayName = user.Name ?? user.Login,
+                Email = user.Email ?? string.Empty,
+                AvatarUrl = user.AvatarUrl ?? string.Empty
+            };
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
