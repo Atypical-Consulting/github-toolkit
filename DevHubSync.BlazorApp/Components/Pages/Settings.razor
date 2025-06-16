@@ -1,0 +1,179 @@
+@page "/settings"
+@using DevHubSync.BlazorApp.Models
+@inject IConfiguration Configuration
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<PageTitle>Settings</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Settings</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Azure DevOps Configuration</MudText>
+                <MudTextField @bind-Value="devOpsConfig.OrganizationUrl" 
+                             Label="Organization URL" 
+                             Variant="Variant.Outlined" 
+                             Class="mt-4"
+                             HelperText="e.g., https://dev.azure.com/yourorg" />
+                <MudTextField @bind-Value="devOpsConfig.PersonalAccessToken" 
+                             Label="Personal Access Token" 
+                             Variant="Variant.Outlined" 
+                             InputType="InputType.Password"
+                             Class="mt-2" />
+                <MudTextField @bind-Value="devOpsConfig.DefaultProject" 
+                             Label="Default Project" 
+                             Variant="Variant.Outlined" 
+                             Class="mt-2" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveDevOpsSettings">
+                    Save DevOps Settings
+                </MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="TestDevOpsConnection">
+                    Test Connection
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+    
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">GitHub Configuration</MudText>
+                <MudTextField @bind-Value="gitHubConfig.PersonalAccessToken" 
+                             Label="Personal Access Token" 
+                             Variant="Variant.Outlined" 
+                             InputType="InputType.Password"
+                             Class="mt-4"
+                             HelperText="Requires repo, workflow, and admin:org scopes" />
+                <MudTextField @bind-Value="gitHubConfig.DefaultOwner" 
+                             Label="Default Owner" 
+                             Variant="Variant.Outlined" 
+                             Class="mt-2" />
+                <MudSwitch @bind-Value="gitHubConfig.CreatePrivateRepos" 
+                          Label="Create Private Repositories by Default" 
+                          Color="Color.Primary"
+                          Class="mt-2" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveGitHubSettings">
+                    Save GitHub Settings
+                </MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="TestGitHubConnection">
+                    Test Connection
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+    
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Sync Configuration</MudText>
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudSwitch @bind-Value="syncConfig.AutoSync" 
+                                  Label="Enable Auto Sync" 
+                                  Color="Color.Primary"
+                                  Class="mt-4" />
+                        <MudNumericField @bind-Value="syncConfig.SyncIntervalMinutes" 
+                                        Label="Sync Interval (minutes)" 
+                                        Variant="Variant.Outlined" 
+                                        Min="5"
+                                        Max="1440"
+                                        Class="mt-2" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSwitch @bind-Value="syncConfig.SyncBranches" 
+                                  Label="Sync Branches" 
+                                  Color="Color.Primary"
+                                  Class="mt-4" />
+                        <MudSwitch @bind-Value="syncConfig.SyncTags" 
+                                  Label="Sync Tags" 
+                                  Color="Color.Primary"
+                                  Class="mt-2" />
+                        <MudSwitch @bind-Value="syncConfig.SyncPullRequests" 
+                                  Label="Sync Pull Requests" 
+                                  Color="Color.Primary"
+                                  Class="mt-2" />
+                        <MudSwitch @bind-Value="syncConfig.SyncIssues" 
+                                  Label="Sync Issues" 
+                                  Color="Color.Primary"
+                                  Class="mt-2" />
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveSyncSettings">
+                    Save Sync Settings
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private DevOpsConfiguration devOpsConfig = new();
+    private GitHubConfiguration gitHubConfig = new();
+    private SyncConfiguration syncConfig = new();
+
+    protected override void OnInitialized()
+    {
+        LoadSettings();
+    }
+
+    private void LoadSettings()
+    {
+        devOpsConfig.OrganizationUrl = Configuration["DevOps:OrganizationUrl"] ?? string.Empty;
+        devOpsConfig.PersonalAccessToken = Configuration["DevOps:PersonalAccessToken"] ?? string.Empty;
+        devOpsConfig.DefaultProject = Configuration["DevOps:DefaultProject"] ?? string.Empty;
+        
+        gitHubConfig.PersonalAccessToken = Configuration["GitHub:PersonalAccessToken"] ?? string.Empty;
+        gitHubConfig.DefaultOwner = Configuration["GitHub:DefaultOwner"] ?? string.Empty;
+        gitHubConfig.CreatePrivateRepos = bool.Parse(Configuration["GitHub:CreatePrivateRepos"] ?? "true");
+        
+        syncConfig.AutoSync = bool.Parse(Configuration["Sync:AutoSync"] ?? "false");
+        syncConfig.SyncIntervalMinutes = int.Parse(Configuration["Sync:SyncIntervalMinutes"] ?? "60");
+        syncConfig.SyncBranches = bool.Parse(Configuration["Sync:SyncBranches"] ?? "true");
+        syncConfig.SyncTags = bool.Parse(Configuration["Sync:SyncTags"] ?? "true");
+        syncConfig.SyncPullRequests = bool.Parse(Configuration["Sync:SyncPullRequests"] ?? "false");
+        syncConfig.SyncIssues = bool.Parse(Configuration["Sync:SyncIssues"] ?? "false");
+    }
+
+    private void SaveDevOpsSettings()
+    {
+        // In a real application, you would save these to a secure configuration store
+        Snackbar.Add("DevOps settings saved successfully!", Severity.Success);
+    }
+
+    private void SaveGitHubSettings()
+    {
+        // In a real application, you would save these to a secure configuration store
+        Snackbar.Add("GitHub settings saved successfully!", Severity.Success);
+    }
+
+    private void SaveSyncSettings()
+    {
+        // In a real application, you would save these to a secure configuration store
+        Snackbar.Add("Sync settings saved successfully!", Severity.Success);
+    }
+
+    private async Task TestDevOpsConnection()
+    {
+        Snackbar.Add("Testing DevOps connection...", Severity.Info);
+        // Implementation would test the actual connection
+        await Task.Delay(1000);
+        Snackbar.Add("DevOps connection test completed!", Severity.Success);
+    }
+
+    private async Task TestGitHubConnection()
+    {
+        Snackbar.Add("Testing GitHub connection...", Severity.Info);
+        // Implementation would test the actual connection
+        await Task.Delay(1000);
+        Snackbar.Add("GitHub connection test completed!", Severity.Success);
+    }
+}

@@ -1,0 +1,231 @@
+@page "/sync"
+@using DevHubSync.BlazorApp.Models
+@using DevHubSync.BlazorApp.Services
+@inject ISyncService SyncService
+@inject IDevOpsService DevOpsService
+@inject IGitHubService GitHubService
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+@implements IDisposable
+
+<PageTitle>Sync Operations</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Sync Operations</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">New Sync Operation</MudText>
+                <MudSelect T="SyncDirection" Label="Sync Direction" @bind-Value="syncDirection" Variant="Variant.Outlined" Class="mt-4">
+                    <MudSelectItem Value="SyncDirection.DevOpsToGitHub">DevOps → GitHub</MudSelectItem>
+                    <MudSelectItem Value="SyncDirection.GitHubToDevOps">GitHub → DevOps</MudSelectItem>
+                </MudSelect>
+                
+                @if (syncDirection == SyncDirection.DevOpsToGitHub)
+                {
+                    <MudTextField @bind-Value="devOpsProject" Label="DevOps Project" Variant="Variant.Outlined" Class="mt-2" />
+                    <MudTextField @bind-Value="devOpsRepoId" Label="DevOps Repository ID" Variant="Variant.Outlined" Class="mt-2" />
+                    <MudTextField @bind-Value="gitHubOwner" Label="GitHub Owner" Variant="Variant.Outlined" Class="mt-2" />
+                    <MudTextField @bind-Value="gitHubRepoName" Label="GitHub Repository Name (optional)" Variant="Variant.Outlined" Class="mt-2" />
+                }
+                else
+                {
+                    <MudTextField @bind-Value="gitHubOwner" Label="GitHub Owner" Variant="Variant.Outlined" Class="mt-2" />
+                    <MudTextField @bind-Value="gitHubRepoName" Label="GitHub Repository Name" Variant="Variant.Outlined" Class="mt-2" />
+                    <MudTextField @bind-Value="devOpsProject" Label="DevOps Project" Variant="Variant.Outlined" Class="mt-2" />
+                    <MudTextField @bind-Value="devOpsRepoId" Label="DevOps Repository ID" Variant="Variant.Outlined" Class="mt-2" />
+                }
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartSync" Disabled="isSyncing">
+                    @if (isSyncing)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ms-2">Syncing...</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Start Sync</MudText>
+                    }
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+    
+    <MudItem xs="12" md="6">
+        @if (currentOperation != null)
+        {
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Current Operation</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2">ID: @currentOperation.Id</MudText>
+                    <MudText Typo="Typo.body2">Direction: @currentOperation.Direction</MudText>
+                    <MudText Typo="Typo.body2">Status: 
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(currentOperation.Status)">
+                            @currentOperation.Status
+                        </MudChip>
+                    </MudText>
+                    @if (!string.IsNullOrEmpty(currentOperation.ErrorMessage))
+                    {
+                        <MudAlert Severity="Severity.Error" Class="mt-2">@currentOperation.ErrorMessage</MudAlert>
+                    }
+                    
+                    <MudText Typo="Typo.h6" Class="mt-4">Logs</MudText>
+                    <MudPaper Class="pa-2 mt-2" Style="max-height: 200px; overflow-y: auto;">
+                        @foreach (var log in currentOperation.Logs)
+                        {
+                            <MudText Typo="Typo.body2" Color="@GetLogColor(log.Level)">
+                                [@log.Timestamp.ToString("HH:mm:ss")] @log.Message
+                            </MudText>
+                        }
+                    </MudPaper>
+                </MudCardContent>
+            </MudCard>
+        }
+    </MudItem>
+</MudGrid>
+
+<MudText Typo="Typo.h5" Class="mt-6 mb-4">Sync History</MudText>
+
+@if (syncHistory.Any())
+{
+    <MudTable Items="@syncHistory" Hover="true" Breakpoint="Breakpoint.Sm">
+        <HeaderContent>
+            <MudTh>Start Time</MudTh>
+            <MudTh>Direction</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Duration</MudTh>
+            <MudTh>Error</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Start Time">@context.StartTime.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+            <MudTd DataLabel="Direction">@context.Direction</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
+                    @context.Status
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Duration">
+                @if (context.EndTime.HasValue)
+                {
+                    @((context.EndTime.Value - context.StartTime).ToString(@"mm\:ss"))
+                }
+                else
+                {
+                    <text>-</text>
+                }
+            </MudTd>
+            <MudTd DataLabel="Error">
+                @if (!string.IsNullOrEmpty(context.ErrorMessage))
+                {
+                    <MudTooltip Text="@context.ErrorMessage">
+                        <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                    </MudTooltip>
+                }
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+else
+{
+    <MudAlert Severity="Severity.Info">No sync operations yet.</MudAlert>
+}
+
+@code {
+    private SyncDirection syncDirection = SyncDirection.DevOpsToGitHub;
+    private string devOpsProject = string.Empty;
+    private string devOpsRepoId = string.Empty;
+    private string gitHubOwner = string.Empty;
+    private string gitHubRepoName = string.Empty;
+    private bool isSyncing = false;
+    private SyncOperation? currentOperation;
+    private List<SyncOperation> syncHistory = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        SyncService.SyncProgressChanged += OnSyncProgressChanged;
+        await LoadSyncHistory();
+    }
+
+    private async Task LoadSyncHistory()
+    {
+        syncHistory = await SyncService.GetSyncHistoryAsync();
+    }
+
+    private async Task StartSync()
+    {
+        isSyncing = true;
+        
+        try
+        {
+            if (syncDirection == SyncDirection.DevOpsToGitHub)
+            {
+                currentOperation = await SyncService.SyncDevOpsToGitHubAsync(
+                    devOpsProject,
+                    devOpsRepoId,
+                    gitHubOwner,
+                    string.IsNullOrEmpty(gitHubRepoName) ? null : gitHubRepoName
+                );
+            }
+            else
+            {
+                currentOperation = await SyncService.SyncGitHubToDevOpsAsync(
+                    gitHubOwner,
+                    gitHubRepoName,
+                    devOpsProject,
+                    devOpsRepoId
+                );
+            }
+            
+            await LoadSyncHistory();
+            
+            if (currentOperation.Status == SyncOperationStatus.Completed)
+            {
+                Snackbar.Add("Sync completed successfully!", Severity.Success);
+            }
+            else if (currentOperation.Status == SyncOperationStatus.Failed)
+            {
+                Snackbar.Add($"Sync failed: {currentOperation.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to start sync: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSyncing = false;
+        }
+    }
+
+    private void OnSyncProgressChanged(object? sender, SyncOperation operation)
+    {
+        if (currentOperation?.Id == operation.Id)
+        {
+            currentOperation = operation;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Color GetStatusColor(SyncOperationStatus status) => status switch
+    {
+        SyncOperationStatus.Completed => Color.Success,
+        SyncOperationStatus.Failed => Color.Error,
+        SyncOperationStatus.InProgress => Color.Info,
+        SyncOperationStatus.Cancelled => Color.Warning,
+        _ => Color.Default
+    };
+
+    private Color GetLogColor(LogLevel level) => level switch
+    {
+        LogLevel.Error => Color.Error,
+        LogLevel.Warning => Color.Warning,
+        _ => Color.Default
+    };
+
+    public void Dispose()
+    {
+        SyncService.SyncProgressChanged -= OnSyncProgressChanged;
+    }
+}

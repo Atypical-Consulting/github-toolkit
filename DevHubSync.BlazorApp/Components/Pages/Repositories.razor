@@ -1,0 +1,152 @@
+@page "/repositories"
+@using DevHubSync.BlazorApp.Models
+@using DevHubSync.BlazorApp.Services
+@inject IDevOpsService DevOpsService
+@inject IGitHubService GitHubService
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<PageTitle>Repositories</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Repositories</MudText>
+
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+    <MudTabPanel Text="DevOps Repositories" Icon="@Icons.Custom.Brands.MicrosoftAzure">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudSelect T="string" Label="Select Project" @bind-Value="selectedDevOpsProject" Variant="Variant.Outlined">
+                    @foreach (var project in devOpsProjects)
+                    {
+                        <MudSelectItem Value="@project">@project</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadDevOpsRepositories" Disabled="string.IsNullOrEmpty(selectedDevOpsProject)">
+                    Load Repositories
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+        
+        @if (devOpsRepositories.Any())
+        {
+            <MudTable Items="@devOpsRepositories" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Default Branch</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Description">@context.Description</MudTd>
+                    <MudTd DataLabel="Default Branch">@context.DefaultBranch</MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="@(() => NavigateToSync(context))">
+                            Sync to GitHub
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudTabPanel>
+    
+    <MudTabPanel Text="GitHub Repositories" Icon="@Icons.Custom.Brands.GitHub">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="gitHubOwner" Label="Owner (leave empty for current user)" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadGitHubRepositories">
+                    Load Repositories
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+        
+        @if (gitHubRepositories.Any())
+        {
+            <MudTable Items="@gitHubRepositories" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Language</MudTh>
+                    <MudTh>Stars</MudTh>
+                    <MudTh>Private</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Description">@context.Description</MudTd>
+                    <MudTd DataLabel="Language">@context.Language</MudTd>
+                    <MudTd DataLabel="Stars">@context.Stars</MudTd>
+                    <MudTd DataLabel="Private">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.IsPrivate ? Color.Error : Color.Success)">
+                            @(context.IsPrivate ? "Private" : "Public")
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="@(() => NavigateToSync(context))">
+                            Sync to DevOps
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private List<DevOpsRepository> devOpsRepositories = new();
+    private List<GitHubRepository> gitHubRepositories = new();
+    private List<string> devOpsProjects = new();
+    private string selectedDevOpsProject = string.Empty;
+    private string gitHubOwner = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            devOpsProjects = await DevOpsService.GetProjectsAsync();
+            if (devOpsProjects.Any())
+            {
+                selectedDevOpsProject = devOpsProjects.First();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load projects: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadDevOpsRepositories()
+    {
+        try
+        {
+            devOpsRepositories = await DevOpsService.GetRepositoriesAsync(selectedDevOpsProject);
+            Snackbar.Add($"Loaded {devOpsRepositories.Count} repositories", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load repositories: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadGitHubRepositories()
+    {
+        try
+        {
+            gitHubRepositories = await GitHubService.GetRepositoriesAsync(gitHubOwner);
+            Snackbar.Add($"Loaded {gitHubRepositories.Count} repositories", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load repositories: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void NavigateToSync(Repository repository)
+    {
+        // Navigation to sync page will be implemented
+        Snackbar.Add($"Sync functionality for {repository.Name} coming soon!", Severity.Info);
+    }
+}
