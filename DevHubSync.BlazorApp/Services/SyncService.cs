@@ -349,6 +349,115 @@ public class SyncService : ISyncService
         SyncProgressChanged?.Invoke(this, operation);
     }
 
+    // Data population methods
+    public async Task<int> PopulateDevOpsProjectsAsync()
+    {
+        var projects = await _devOpsService.GetProjectsAsync();
+        int addedCount = 0;
+
+        foreach (var projectName in projects)
+        {
+            // Note: We need to get more project details from the DevOps service
+            // For now, we'll create basic project entries
+            var project = new DevOpsProject
+            {
+                ProjectId = projectName, // This should ideally be the actual project ID
+                Name = projectName,
+                Description = string.Empty,
+                OrganizationUrl = string.Empty // This should come from configuration
+            };
+
+            await CreateOrUpdateDevOpsProjectAsync(project);
+            addedCount++;
+        }
+
+        return addedCount;
+    }
+
+    public async Task<int> PopulateDevOpsRepositoriesAsync(string projectId)
+    {
+        var project = await _context.DevOpsProjects
+            .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+        
+        if (project == null)
+            throw new ArgumentException($"DevOps project with ID {projectId} not found in database");
+
+        var repositories = await _devOpsService.GetRepositoriesAsync(projectId);
+        int addedCount = 0;
+
+        foreach (var repo in repositories)
+        {
+            var repositoryEntity = new RepositoryEntity
+            {
+                ExternalId = repo.Id,
+                Name = repo.Name,
+                Description = repo.Description,
+                Url = repo.Url,
+                DefaultBranch = repo.DefaultBranch,
+                Source = RepositorySource.DevOps,
+                DevOpsProjectId = project.Id,
+                LastUpdated = repo.LastUpdated
+            };
+
+            await CreateOrUpdateRepositoryAsync(repositoryEntity);
+            addedCount++;
+        }
+
+        return addedCount;
+    }
+
+    public async Task<int> PopulateGitHubRepositoriesAsync(string? owner = null)
+    {
+        GitHubUser? user = null;
+        
+        if (!string.IsNullOrEmpty(owner))
+        {
+            user = await PopulateGitHubUserAsync(owner);
+        }
+
+        var repositories = await _gitHubService.GetRepositoriesAsync(owner);
+        int addedCount = 0;
+
+        foreach (var repo in repositories)
+        {
+            var repositoryEntity = new RepositoryEntity
+            {
+                ExternalId = repo.Id,
+                Name = repo.Name,
+                Description = repo.Description,
+                Url = repo.Url,
+                DefaultBranch = repo.DefaultBranch,
+                Source = RepositorySource.GitHub,
+                GitHubUserId = user?.Id,
+                IsPrivate = repo.IsPrivate,
+                Language = repo.Language,
+                Stars = repo.Stars,
+                Forks = repo.Forks,
+                LastUpdated = repo.LastUpdated
+            };
+
+            await CreateOrUpdateRepositoryAsync(repositoryEntity);
+            addedCount++;
+        }
+
+        return addedCount;
+    }
+
+    public async Task<GitHubUser> PopulateGitHubUserAsync(string username)
+    {
+        // For now, create a basic user entry
+        // This could be enhanced to fetch actual user details from GitHub API
+        var user = new GitHubUser
+        {
+            Username = username,
+            DisplayName = username,
+            Email = string.Empty,
+            AvatarUrl = string.Empty
+        };
+
+        return await CreateOrUpdateGitHubUserAsync(user);
+    }
+
     private SyncOperation MapToSyncOperation(SyncOperationEntity entity)
     {
         return new SyncOperation

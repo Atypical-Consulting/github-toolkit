@@ -241,45 +241,45 @@ else
         syncHistory = await SyncService.GetSyncHistoryAsync();
     }
 
-    private async Task<IEnumerable<DevOpsProject>> SearchDevOpsProjects(string value, CancellationToken token)
+    private Task<IEnumerable<DevOpsProject>> SearchDevOpsProjects(string value, CancellationToken token)
     {
         if (string.IsNullOrEmpty(value))
-            return devOpsProjects;
+            return Task.FromResult(devOpsProjects.AsEnumerable());
         
-        return devOpsProjects.Where(p => p.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        return Task.FromResult(devOpsProjects.Where(p => p.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)));
     }
 
-    private async Task<IEnumerable<GitHubUser>> SearchGitHubUsers(string value, CancellationToken token)
+    private Task<IEnumerable<GitHubUser>> SearchGitHubUsers(string value, CancellationToken token)
     {
         if (string.IsNullOrEmpty(value))
-            return gitHubUsers;
+            return Task.FromResult(gitHubUsers.AsEnumerable());
         
-        return gitHubUsers.Where(u => u.Username.Contains(value, StringComparison.InvariantCultureIgnoreCase) ||
-                                     u.DisplayName.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        return Task.FromResult(gitHubUsers.Where(u => u.Username.Contains(value, StringComparison.InvariantCultureIgnoreCase) ||
+                                     u.DisplayName.Contains(value, StringComparison.InvariantCultureIgnoreCase)));
     }
 
-    private async Task<IEnumerable<RepositoryEntity>> SearchDevOpsRepositories(string value, CancellationToken token)
+    private Task<IEnumerable<RepositoryEntity>> SearchDevOpsRepositories(string value, CancellationToken token)
     {
         var repos = selectedDevOpsProject != null 
             ? devOpsRepositories.Where(r => r.DevOpsProjectId == selectedDevOpsProject.Id)
             : devOpsRepositories;
         
         if (string.IsNullOrEmpty(value))
-            return repos;
+            return Task.FromResult(repos.AsEnumerable());
         
-        return repos.Where(r => r.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        return Task.FromResult(repos.Where(r => r.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)));
     }
 
-    private async Task<IEnumerable<RepositoryEntity>> SearchGitHubRepositories(string value, CancellationToken token)
+    private Task<IEnumerable<RepositoryEntity>> SearchGitHubRepositories(string value, CancellationToken token)
     {
         var repos = selectedGitHubUser != null 
             ? gitHubRepositories.Where(r => r.GitHubUserId == selectedGitHubUser.Id)
             : gitHubRepositories;
         
         if (string.IsNullOrEmpty(value))
-            return repos;
+            return Task.FromResult(repos.AsEnumerable());
         
-        return repos.Where(r => r.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        return Task.FromResult(repos.Where(r => r.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)));
     }
 
     private bool CanStartSync()

@@ -28,5 +28,11 @@ public interface ISyncService
     Task<GitHubUser?> GetGitHubUserAsync(int id);
     Task<GitHubUser> CreateOrUpdateGitHubUserAsync(GitHubUser user);
     
+    // Data population from external APIs
+    Task<int> PopulateDevOpsProjectsAsync();
+    Task<int> PopulateDevOpsRepositoriesAsync(string projectId);
+    Task<int> PopulateGitHubRepositoriesAsync(string? owner = null);
+    Task<GitHubUser> PopulateGitHubUserAsync(string username);
+    
     event EventHandler<SyncOperation>? SyncProgressChanged;
 }
