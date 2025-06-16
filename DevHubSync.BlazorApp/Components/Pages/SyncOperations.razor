@@ -1,6 +1,7 @@
 @page "/sync"
 @using DevHubSync.BlazorApp.Models
 @using DevHubSync.BlazorApp.Services
+@using DevHubSync.BlazorApp.Data.Entities
 @inject ISyncService SyncService
 @inject IDevOpsService DevOpsService
 @inject IGitHubService GitHubService
@@ -24,21 +25,86 @@
                 
                 @if (syncDirection == SyncDirection.DevOpsToGitHub)
                 {
-                    <MudTextField @bind-Value="devOpsProject" Label="DevOps Project" Variant="Variant.Outlined" Class="mt-2" />
-                    <MudTextField @bind-Value="devOpsRepoId" Label="DevOps Repository ID" Variant="Variant.Outlined" Class="mt-2" />
-                    <MudTextField @bind-Value="gitHubOwner" Label="GitHub Owner" Variant="Variant.Outlined" Class="mt-2" />
+                    <MudAutocomplete T="DevOpsProject" 
+                                   Label="DevOps Project" 
+                                   @bind-Value="selectedDevOpsProject"
+                                   SearchFunc="SearchDevOpsProjects"
+                                   ToStringFunc="@(p => p?.Name ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false" />
+                    
+                    <MudAutocomplete T="RepositoryEntity" 
+                                   Label="DevOps Repository" 
+                                   @bind-Value="selectedDevOpsRepository"
+                                   SearchFunc="SearchDevOpsRepositories"
+                                   ToStringFunc="@(r => r?.Name ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false"
+                                   Disabled="selectedDevOpsProject == null" />
+                    
+                    <MudAutocomplete T="GitHubUser" 
+                                   Label="GitHub Owner" 
+                                   @bind-Value="selectedGitHubUser"
+                                   SearchFunc="SearchGitHubUsers"
+                                   ToStringFunc="@(u => u?.Username ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false" />
+                    
                     <MudTextField @bind-Value="gitHubRepoName" Label="GitHub Repository Name (optional)" Variant="Variant.Outlined" Class="mt-2" />
                 }
                 else
                 {
-                    <MudTextField @bind-Value="gitHubOwner" Label="GitHub Owner" Variant="Variant.Outlined" Class="mt-2" />
-                    <MudTextField @bind-Value="gitHubRepoName" Label="GitHub Repository Name" Variant="Variant.Outlined" Class="mt-2" />
-                    <MudTextField @bind-Value="devOpsProject" Label="DevOps Project" Variant="Variant.Outlined" Class="mt-2" />
-                    <MudTextField @bind-Value="devOpsRepoId" Label="DevOps Repository ID" Variant="Variant.Outlined" Class="mt-2" />
+                    <MudAutocomplete T="GitHubUser" 
+                                   Label="GitHub Owner" 
+                                   @bind-Value="selectedGitHubUser"
+                                   SearchFunc="SearchGitHubUsers"
+                                   ToStringFunc="@(u => u?.Username ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false" />
+                    
+                    <MudAutocomplete T="RepositoryEntity" 
+                                   Label="GitHub Repository" 
+                                   @bind-Value="selectedGitHubRepository"
+                                   SearchFunc="SearchGitHubRepositories"
+                                   ToStringFunc="@(r => r?.Name ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false"
+                                   Disabled="selectedGitHubUser == null" />
+                    
+                    <MudAutocomplete T="DevOpsProject" 
+                                   Label="DevOps Project" 
+                                   @bind-Value="selectedDevOpsProject"
+                                   SearchFunc="SearchDevOpsProjects"
+                                   ToStringFunc="@(p => p?.Name ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false" />
+                    
+                    <MudAutocomplete T="RepositoryEntity" 
+                                   Label="DevOps Repository" 
+                                   @bind-Value="selectedDevOpsRepository"
+                                   SearchFunc="SearchDevOpsRepositories"
+                                   ToStringFunc="@(r => r?.Name ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false"
+                                   Disabled="selectedDevOpsProject == null" />
                 }
             </MudCardContent>
             <MudCardActions>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartSync" Disabled="isSyncing">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartSync" Disabled="@(!CanStartSync() || isSyncing)">
                     @if (isSyncing)
                     {
                         <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -94,6 +160,8 @@
         <HeaderContent>
             <MudTh>Start Time</MudTh>
             <MudTh>Direction</MudTh>
+            <MudTh>Source</MudTh>
+            <MudTh>Target</MudTh>
             <MudTh>Status</MudTh>
             <MudTh>Duration</MudTh>
             <MudTh>Error</MudTh>
@@ -101,6 +169,8 @@
         <RowTemplate>
             <MudTd DataLabel="Start Time">@context.StartTime.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
             <MudTd DataLabel="Direction">@context.Direction</MudTd>
+            <MudTd DataLabel="Source">@context.SourceRepositoryId</MudTd>
+            <MudTd DataLabel="Target">@(context.TargetRepositoryId ?? "N/A")</MudTd>
             <MudTd DataLabel="Status">
                 <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
                     @context.Status
@@ -134,18 +204,36 @@ else
 
 @code {
     private SyncDirection syncDirection = SyncDirection.DevOpsToGitHub;
-    private string devOpsProject = string.Empty;
-    private string devOpsRepoId = string.Empty;
-    private string gitHubOwner = string.Empty;
     private string gitHubRepoName = string.Empty;
     private bool isSyncing = false;
     private SyncOperation? currentOperation;
     private List<SyncOperation> syncHistory = new();
+    
+    // Autocomplete selected values
+    private DevOpsProject? selectedDevOpsProject;
+    private GitHubUser? selectedGitHubUser;
+    private RepositoryEntity? selectedDevOpsRepository;
+    private RepositoryEntity? selectedGitHubRepository;
+    
+    // Data lists for autocomplete
+    private List<DevOpsProject> devOpsProjects = new();
+    private List<GitHubUser> gitHubUsers = new();
+    private List<RepositoryEntity> devOpsRepositories = new();
+    private List<RepositoryEntity> gitHubRepositories = new();
 
     protected override async Task OnInitializedAsync()
     {
         SyncService.SyncProgressChanged += OnSyncProgressChanged;
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
         await LoadSyncHistory();
+        devOpsProjects = await SyncService.GetDevOpsProjectsAsync();
+        gitHubUsers = await SyncService.GetGitHubUsersAsync();
+        devOpsRepositories = await SyncService.GetDevOpsRepositoriesAsync();
+        gitHubRepositories = await SyncService.GetGitHubRepositoriesAsync();
     }
 
     private async Task LoadSyncHistory()
@@ -153,8 +241,64 @@ else
         syncHistory = await SyncService.GetSyncHistoryAsync();
     }
 
+    private async Task<IEnumerable<DevOpsProject>> SearchDevOpsProjects(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return devOpsProjects;
+        
+        return devOpsProjects.Where(p => p.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private async Task<IEnumerable<GitHubUser>> SearchGitHubUsers(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return gitHubUsers;
+        
+        return gitHubUsers.Where(u => u.Username.Contains(value, StringComparison.InvariantCultureIgnoreCase) ||
+                                     u.DisplayName.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private async Task<IEnumerable<RepositoryEntity>> SearchDevOpsRepositories(string value, CancellationToken token)
+    {
+        var repos = selectedDevOpsProject != null 
+            ? devOpsRepositories.Where(r => r.DevOpsProjectId == selectedDevOpsProject.Id)
+            : devOpsRepositories;
+        
+        if (string.IsNullOrEmpty(value))
+            return repos;
+        
+        return repos.Where(r => r.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private async Task<IEnumerable<RepositoryEntity>> SearchGitHubRepositories(string value, CancellationToken token)
+    {
+        var repos = selectedGitHubUser != null 
+            ? gitHubRepositories.Where(r => r.GitHubUserId == selectedGitHubUser.Id)
+            : gitHubRepositories;
+        
+        if (string.IsNullOrEmpty(value))
+            return repos;
+        
+        return repos.Where(r => r.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private bool CanStartSync()
+    {
+        if (syncDirection == SyncDirection.DevOpsToGitHub)
+        {
+            return selectedDevOpsProject != null && selectedDevOpsRepository != null && selectedGitHubUser != null;
+        }
+        else
+        {
+            return selectedGitHubUser != null && selectedGitHubRepository != null && 
+                   selectedDevOpsProject != null && selectedDevOpsRepository != null;
+        }
+    }
+
     private async Task StartSync()
     {
+        if (!CanStartSync()) return;
+        
         isSyncing = true;
         
         try
@@ -162,19 +306,19 @@ else
             if (syncDirection == SyncDirection.DevOpsToGitHub)
             {
                 currentOperation = await SyncService.SyncDevOpsToGitHubAsync(
-                    devOpsProject,
-                    devOpsRepoId,
-                    gitHubOwner,
+                    selectedDevOpsProject!.ProjectId,
+                    selectedDevOpsRepository!.ExternalId,
+                    selectedGitHubUser!.Username,
                     string.IsNullOrEmpty(gitHubRepoName) ? null : gitHubRepoName
                 );
             }
             else
             {
                 currentOperation = await SyncService.SyncGitHubToDevOpsAsync(
-                    gitHubOwner,
-                    gitHubRepoName,
-                    devOpsProject,
-                    devOpsRepoId
+                    selectedGitHubUser!.Username,
+                    selectedGitHubRepository!.Name,
+                    selectedDevOpsProject!.ProjectId,
+                    selectedDevOpsRepository!.ExternalId
                 );
             }
             
