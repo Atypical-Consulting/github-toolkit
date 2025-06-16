@@ -244,4 +244,62 @@ public class GitHubService : IGitHubService
             return null;
         }
     }
+
+    public async Task<string> CreateCommitWithAuthorAsync(string owner, string name, string branch, Dictionary<string, string> files, string commitMessage, string authorName, string authorEmail, DateTime authorDate)
+    {
+        EnsureClient();
+        
+        // Get the current commit SHA
+        var baseCommitSha = await GetLatestCommitShaAsync(owner, name, branch);
+        
+        // Get the current tree
+        var baseCommit = await _client!.Git.Commit.Get(owner, name, baseCommitSha);
+        var baseTree = await _client.Git.Tree.Get(owner, name, baseCommit.Tree.Sha);
+        
+        // Create new tree with updated files
+        var newTree = new NewTree { BaseTree = baseTree.Sha };
+        
+        foreach (var file in files)
+        {
+            var blob = new NewBlob
+            {
+                Content = file.Value,
+                Encoding = EncodingType.Utf8
+            };
+            
+            var blobResult = await _client.Git.Blob.Create(owner, name, blob);
+            
+            newTree.Tree.Add(new NewTreeItem
+            {
+                Path = file.Key,
+                Mode = "100644",
+                Type = TreeType.Blob,
+                Sha = blobResult.Sha
+            });
+        }
+        
+        var treeResult = await _client.Git.Tree.Create(owner, name, newTree);
+        
+        // Create the commit with author information
+        var newCommit = new NewCommit(commitMessage, treeResult.Sha, baseCommitSha)
+        {
+            Author = new Committer(authorName, authorEmail, authorDate),
+            Committer = new Committer(authorName, authorEmail, authorDate)
+        };
+        
+        var commitResult = await _client.Git.Commit.Create(owner, name, newCommit);
+        
+        // Update the branch reference
+        await _client.Git.Reference.Update(owner, name, $"heads/{branch}", new ReferenceUpdate(commitResult.Sha));
+        
+        return commitResult.Sha;
+    }
+
+    public async Task<string> GetLatestCommitShaAsync(string owner, string name, string branch)
+    {
+        EnsureClient();
+        
+        var reference = await _client!.Git.Reference.Get(owner, name, $"heads/{branch}");
+        return reference.Object.Sha;
+    }
 }

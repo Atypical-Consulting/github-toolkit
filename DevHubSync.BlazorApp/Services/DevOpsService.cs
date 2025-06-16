@@ -158,4 +158,160 @@ public class DevOpsService : IDevOpsService
         var branches = await _gitClient!.GetBranchesAsync(projectName, Guid.Parse(repositoryId));
         return branches.Select(b => b.Name).ToList();
     }
+
+    public async Task<List<DevOpsCommit>> GetCommitsAsync(string projectName, string repositoryId, string? branch = null, int top = 100)
+    {
+        EnsureConnection();
+        
+        var searchCriteria = new GitQueryCommitsCriteria();
+        if (!string.IsNullOrEmpty(branch))
+        {
+            searchCriteria.ItemVersion = new GitVersionDescriptor
+            {
+                Version = branch,
+                VersionType = GitVersionType.Branch
+            };
+        }
+
+        var commits = await _gitClient!.GetCommitsAsync(
+            projectName,
+            Guid.Parse(repositoryId),
+            searchCriteria,
+            top: top);
+
+        var result = new List<DevOpsCommit>();
+        foreach (var commit in commits)
+        {
+            var devOpsCommit = new DevOpsCommit
+            {
+                Id = commit.CommitId,
+                Message = commit.Comment ?? string.Empty,
+                AuthorName = commit.Author?.Name ?? string.Empty,
+                AuthorEmail = commit.Author?.Email ?? string.Empty,
+                AuthorDate = commit.Author?.Date ?? DateTime.UtcNow,
+                CommitterName = commit.Committer?.Name ?? string.Empty,
+                CommitterEmail = commit.Committer?.Email ?? string.Empty,
+                CommitterDate = commit.Committer?.Date ?? DateTime.UtcNow,
+                ParentIds = commit.Parents?.ToList() ?? new List<string>(),
+                TreeId = string.Empty, // TreeId is not available in GitCommitRef
+                Url = commit.RemoteUrl ?? string.Empty
+            };
+
+            // Get commit changes
+            try
+            {
+                var changes = await _gitClient.GetChangesAsync(
+                    projectName,
+                    commit.CommitId,
+                    Guid.Parse(repositoryId));
+
+                devOpsCommit.Changes = changes.Changes.Select(change => new DevOpsCommitChange
+                {
+                    ChangeType = change.ChangeType.ToString(),
+                    Path = change.Item?.Path ?? string.Empty,
+                    OriginalPath = change.SourceServerItem,
+                    IsBinary = change.Item?.ContentMetadata?.IsBinary ?? false
+                }).ToList();
+            }
+            catch
+            {
+                // If we can't get changes, continue with empty changes list
+            }
+
+            result.Add(devOpsCommit);
+        }
+
+        return result;
+    }
+
+    public async Task<DevOpsCommit?> GetCommitAsync(string projectName, string repositoryId, string commitId)
+    {
+        EnsureConnection();
+        
+        try
+        {
+            var commit = await _gitClient!.GetCommitAsync(projectName, commitId, Guid.Parse(repositoryId));
+            
+            var devOpsCommit = new DevOpsCommit
+            {
+                Id = commit.CommitId,
+                Message = commit.Comment ?? string.Empty,
+                AuthorName = commit.Author?.Name ?? string.Empty,
+                AuthorEmail = commit.Author?.Email ?? string.Empty,
+                AuthorDate = commit.Author?.Date ?? DateTime.UtcNow,
+                CommitterName = commit.Committer?.Name ?? string.Empty,
+                CommitterEmail = commit.Committer?.Email ?? string.Empty,
+                CommitterDate = commit.Committer?.Date ?? DateTime.UtcNow,
+                ParentIds = commit.Parents?.ToList() ?? new List<string>(),
+                TreeId = string.Empty, // TreeId is not available in GitCommit
+                Url = commit.RemoteUrl ?? string.Empty
+            };
+
+            // Get commit changes
+            try
+            {
+                var changes = await _gitClient.GetChangesAsync(
+                    projectName,
+                    commitId,
+                    Guid.Parse(repositoryId));
+
+                devOpsCommit.Changes = changes.Changes.Select(change => new DevOpsCommitChange
+                {
+                    ChangeType = change.ChangeType.ToString(),
+                    Path = change.Item?.Path ?? string.Empty,
+                    OriginalPath = change.SourceServerItem,
+                    IsBinary = change.Item?.ContentMetadata?.IsBinary ?? false
+                }).ToList();
+            }
+            catch
+            {
+                // If we can't get changes, continue with empty changes list
+            }
+
+            return devOpsCommit;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public async Task<byte[]> GetCommitContentAsync(string projectName, string repositoryId, string commitId)
+    {
+        EnsureConnection();
+        
+        var items = await _gitClient!.GetItemsAsync(
+            projectName,
+            Guid.Parse(repositoryId),
+            scopePath: "/",
+            recursionLevel: VersionControlRecursionType.Full,
+            versionDescriptor: new GitVersionDescriptor
+            {
+                Version = commitId,
+                VersionType = GitVersionType.Commit
+            });
+
+        using var memoryStream = new MemoryStream();
+        using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+        {
+            foreach (var item in items.Where(i => !i.IsFolder))
+            {
+                var content = await _gitClient.GetItemContentAsync(
+                    projectName,
+                    Guid.Parse(repositoryId),
+                    item.Path,
+                    versionDescriptor: new GitVersionDescriptor
+                    {
+                        Version = commitId,
+                        VersionType = GitVersionType.Commit
+                    });
+
+                var entry = archive.CreateEntry(item.Path.TrimStart('/'));
+                using var entryStream = entry.Open();
+                await content.CopyToAsync(entryStream);
+            }
+        }
+
+        return memoryStream.ToArray();
+    }
 }

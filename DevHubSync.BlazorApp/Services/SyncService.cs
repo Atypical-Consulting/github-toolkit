@@ -43,7 +43,7 @@ public class SyncService : ISyncService
         _context.SyncOperations.Add(operationEntity);
         await _context.SaveChangesAsync();
         
-        await LogOperationAsync(operation, operationEntity, "Starting DevOps to GitHub sync", Models.LogLevel.Info);
+        await LogOperationAsync(operation, operationEntity, "Starting DevOps to GitHub sync with commit history preservation", Models.LogLevel.Info);
         
         try
         {
@@ -55,12 +55,7 @@ public class SyncService : ISyncService
             
             await LogOperationAsync(operation, operationEntity, $"Found DevOps repository: {devOpsRepo.Name}", Models.LogLevel.Info);
             
-            var branches = await _devOpsService.GetBranchesAsync(devOpsProject, devOpsRepoId);
             var defaultBranch = devOpsRepo.DefaultBranch;
-            
-            await LogOperationAsync(operation, operationEntity, $"Downloading repository content from branch: {defaultBranch}", Models.LogLevel.Info);
-            var zipContent = await _devOpsService.DownloadRepositoryAsync(devOpsProject, devOpsRepoId, defaultBranch);
-            
             var targetRepoName = gitHubRepoName ?? devOpsRepo.Name;
             var gitHubRepo = await _gitHubService.GetRepositoryAsync(gitHubOwner, targetRepoName);
             
@@ -76,21 +71,67 @@ public class SyncService : ISyncService
             
             operation.TargetRepositoryId = gitHubRepo.Id;
             
-            await LogOperationAsync(operation, operationEntity, "Uploading content to GitHub", Models.LogLevel.Info);
-            await _gitHubService.UploadRepositoryAsync(
-                gitHubOwner,
-                targetRepoName,
-                zipContent,
-                gitHubRepo.DefaultBranch,
-                $"Sync from DevOps: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}"
-            );
+            await LogOperationAsync(operation, operationEntity, "Fetching commit history from DevOps", Models.LogLevel.Info);
+            var commits = await _devOpsService.GetCommitsAsync(devOpsProject, devOpsRepoId, defaultBranch, 100);
+            
+            await LogOperationAsync(operation, operationEntity, $"Found {commits.Count} commits to sync", Models.LogLevel.Info);
+            
+            // Reverse commits to apply them in chronological order (oldest first)
+            commits.Reverse();
+            
+            var processedCommits = 0;
+            foreach (var commit in commits)
+            {
+                await LogOperationAsync(operation, operationEntity, $"Processing commit {processedCommits + 1}/{commits.Count}: {commit.Message.Split('\n')[0]}", Models.LogLevel.Info);
+                
+                try
+                {
+                    // Get files for this specific commit
+                    var commitContent = await _devOpsService.GetCommitContentAsync(devOpsProject, devOpsRepoId, commit.Id);
+                    
+                    // Extract files from ZIP content
+                    var files = new Dictionary<string, string>();
+                    using var memoryStream = new MemoryStream(commitContent);
+                    using var archive = new System.IO.Compression.ZipArchive(memoryStream, System.IO.Compression.ZipArchiveMode.Read);
+                    
+                    foreach (var entry in archive.Entries.Where(e => !string.IsNullOrEmpty(e.Name)))
+                    {
+                        using var entryStream = entry.Open();
+                        using var reader = new StreamReader(entryStream);
+                        var content = await reader.ReadToEndAsync();
+                        files[entry.FullName] = content;
+                    }
+                    
+                    if (files.Any())
+                    {
+                        // Create commit with original author and timestamp
+                        await _gitHubService.CreateCommitWithAuthorAsync(
+                            gitHubOwner,
+                            targetRepoName,
+                            gitHubRepo.DefaultBranch,
+                            files,
+                            commit.Message,
+                            commit.AuthorName,
+                            commit.AuthorEmail,
+                            commit.AuthorDate
+                        );
+                    }
+                    
+                    processedCommits++;
+                    await LogOperationAsync(operation, operationEntity, $"Successfully processed commit {processedCommits}/{commits.Count}", Models.LogLevel.Info);
+                }
+                catch (Exception ex)
+                {
+                    await LogOperationAsync(operation, operationEntity, $"Failed to process commit {commit.Id}: {ex.Message}", Models.LogLevel.Warning);
+                }
+            }
             
             operation.Status = SyncOperationStatus.Completed;
             operation.EndTime = DateTime.UtcNow;
             operationEntity.Status = SyncOperationStatus.Completed;
             operationEntity.EndTime = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            await LogOperationAsync(operation, operationEntity, "Sync completed successfully", Models.LogLevel.Info);
+            await LogOperationAsync(operation, operationEntity, $"Sync completed successfully. Processed {processedCommits} commits with preserved history.", Models.LogLevel.Info);
         }
         catch (Exception ex)
         {

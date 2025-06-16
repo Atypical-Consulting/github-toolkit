@@ -14,4 +14,6 @@ public interface IGitHubService
     Task UploadRepositoryAsync(string owner, string name, byte[] zipContent, string branch, string commitMessage);
     Task<GitHubUser?> GetUserAsync(string username);
     Task<GitHubUser?> GetCurrentUserAsync();
+    Task<string> CreateCommitWithAuthorAsync(string owner, string name, string branch, Dictionary<string, string> files, string commitMessage, string authorName, string authorEmail, DateTime authorDate);
+    Task<string> GetLatestCommitShaAsync(string owner, string name, string branch);
 }

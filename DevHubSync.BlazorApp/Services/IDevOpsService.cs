@@ -10,4 +10,7 @@ public interface IDevOpsService
     Task<bool> TestConnectionAsync();
     Task<List<string>> GetProjectsAsync();
     Task<List<string>> GetBranchesAsync(string projectName, string repositoryId);
+    Task<List<DevOpsCommit>> GetCommitsAsync(string projectName, string repositoryId, string? branch = null, int top = 100);
+    Task<DevOpsCommit?> GetCommitAsync(string projectName, string repositoryId, string commitId);
+    Task<byte[]> GetCommitContentAsync(string projectName, string repositoryId, string commitId);
 }

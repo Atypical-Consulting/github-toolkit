@@ -1,6 +1,6 @@
 @inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider Theme="@_theme" IsDarkMode="@_isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -10,6 +10,10 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudText Typo="Typo.h5" Class="ml-3">DevHub Sync</MudText>
         <MudSpacer />
+        <MudTooltip Text="Toggle Dark Mode">
+            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)" 
+                          Color="Color.Inherit" OnClick="@ToggleDarkMode" />
+        </MudTooltip>
         <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com" Target="_blank" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
@@ -32,9 +36,45 @@
 
 @code {
     private bool _drawerOpen = true;
+    private bool _isDarkMode = true; // Start with dark mode enabled
+    private MudTheme _theme = new();
+
+    protected override void OnInitialized()
+    {
+        _theme = new MudTheme
+        {
+            PaletteLight = new PaletteLight
+            {
+                Primary = "#1976d2",
+                Secondary = "#424242",
+                AppbarBackground = "#1976d2",
+            },
+            PaletteDark = new PaletteDark
+            {
+                Primary = "#90caf9",
+                Secondary = "#f48fb1",
+                AppbarBackground = "#1e1e1e",
+                Surface = "#1e1e1e",
+                Background = "#121212",
+                TextPrimary = "#ffffff",
+                TextSecondary = "rgba(255,255,255,0.7)",
+                ActionDefault = "#ffffff",
+                ActionDisabled = "rgba(255,255,255,0.26)",
+                ActionDisabledBackground = "rgba(255,255,255,0.12)",
+                DrawerBackground = "#1e1e1e",
+                DrawerText = "#ffffff",
+                DrawerIcon = "#ffffff"
+            }
+        };
+    }
 
     private void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
+    }
+
+    private void ToggleDarkMode()
+    {
+        _isDarkMode = !_isDarkMode;
     }
 }

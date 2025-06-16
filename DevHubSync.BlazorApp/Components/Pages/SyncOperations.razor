@@ -343,12 +343,17 @@ else
         }
     }
 
-    private void OnSyncProgressChanged(object? sender, SyncOperation operation)
+    private async void OnSyncProgressChanged(object? sender, SyncOperation operation)
     {
         if (currentOperation?.Id == operation.Id)
         {
-            currentOperation = operation;
-            InvokeAsync(StateHasChanged);
+            // Reload the current operation from the database to get latest logs
+            var updatedOperation = await SyncService.GetSyncOperationAsync(operation.Id);
+            if (updatedOperation != null)
+            {
+                currentOperation = updatedOperation;
+                await InvokeAsync(StateHasChanged);
+            }
         }
     }
 
