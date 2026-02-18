@@ -1,0 +1,17 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# 
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubRepoTools.Cli", "GitHubRepoTools.Cli\GitHubRepoTools.Cli.csproj", "{230831C4-AADD-421E-AD3B-8B79C238F5D4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{230831C4-AADD-421E-AD3B-8B79C238F5D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{230831C4-AADD-421E-AD3B-8B79C238F5D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{230831C4-AADD-421E-AD3B-8B79C238F5D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{230831C4-AADD-421E-AD3B-8B79C238F5D4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
