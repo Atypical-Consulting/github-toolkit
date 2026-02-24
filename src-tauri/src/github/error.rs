@@ -1,0 +1,42 @@
+use serde::{Deserialize, Serialize};
+use specta::Type;
+use thiserror::Error;
+
+#[derive(Debug, Error, Serialize, Deserialize, Type, Clone)]
+#[serde(tag = "type", content = "message")]
+pub enum GitHubError {
+    #[error("OAuth flow failed: {0}")]
+    OAuthFailed(String),
+    #[error("Authorization pending")]
+    AuthorizationPending,
+    #[error("Authorization denied by user")]
+    AccessDenied,
+    #[error("Device code expired")]
+    ExpiredToken,
+    #[error("Rate limited, slow down")]
+    SlowDown,
+    #[error("Keychain error: {0}")]
+    KeychainError(String),
+    #[error("Network error: {0}")]
+    NetworkError(String),
+    #[error("Not authenticated")]
+    NotAuthenticated,
+    #[error("Rate limit exceeded: {0}")]
+    RateLimitExceeded(String),
+    #[error("Internal error: {0}")]
+    Internal(String),
+    #[error("Operation cancelled")]
+    Cancelled,
+    #[error("API error: {0}")]
+    ApiError(String),
+    #[error("Not found: {0}")]
+    NotFound(String),
+    #[error("Forbidden: {0}")]
+    Forbidden(String),
+    #[error("Merge not allowed: {0}")]
+    MergeNotAllowed(String),
+    #[error("Head has changed: {0}")]
+    HeadChanged(String),
+    #[error("Validation failed: {0}")]
+    ValidationFailed(String),
+}
