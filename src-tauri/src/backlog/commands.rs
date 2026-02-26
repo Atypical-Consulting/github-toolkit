@@ -17,6 +17,16 @@ pub fn generate_backlog_from_scan(
     for report in &reports {
         for result in &report.results {
             if !result.passed {
+                // Skip if backlog item already exists for this repo+rule
+                if crate::storage::backlog::backlog_item_exists(
+                    &db,
+                    &report.repo_full_name,
+                    &result.rule_id,
+                )
+                .unwrap_or(false)
+                {
+                    continue;
+                }
                 let priority = match result.severity {
                     Severity::Critical => 100,
                     Severity::Warning => 50,

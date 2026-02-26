@@ -118,3 +118,13 @@ pub fn delete_backlog_item(db: &DbState, id: &str) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
     Ok(())
 }
+
+pub fn backlog_item_exists(db: &DbState, repo_full_name: &str, source_ref: &str) -> Result<bool, String> {
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
+    let count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM backlog_items WHERE repo_full_name = ?1 AND source_ref = ?2",
+        params![repo_full_name, source_ref],
+        |row| row.get(0),
+    ).map_err(|e| e.to_string())?;
+    Ok(count > 0)
+}
