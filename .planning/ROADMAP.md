@@ -34,9 +34,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 
 Plans:
-- [ ] 01-01: Extend ScanProgress Rust struct with per-repo report field and fix event listener lifecycle
-- [ ] 01-02: Update scan.slice.ts to process per-repo events incrementally with subscribeWithSelector
-- [ ] 01-03: Add skeleton/shimmer state per repo card and animated health ring fill transition
+- [ ] 01-01-PLAN.md — Extend ScanProgress Rust struct with per-repo report payload and rewrite scan.slice.ts event handler with listener lifecycle fix
+- [ ] 01-02-PLAN.md — Add shimmer CSS, update health ring animation timing, extract RepoRow component with per-repo selectors
+- [ ] 01-03-PLAN.md — Integration smoke test and visual verification of all SCAN requirements
 
 ### Phase 2: MCP Foundation
 **Goal**: A compilable `github-automate-mcp` binary exists, connects via stdio, responds to `tools/list`, and has correct logging, error sanitization, and WAL-mode SQLite
