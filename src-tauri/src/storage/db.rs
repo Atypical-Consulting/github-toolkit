@@ -9,6 +9,14 @@ pub fn init_db(app_data_dir: &Path) -> Result<Connection, rusqlite::Error> {
     let db_path = app_data_dir.join("github-automate.db");
     let conn = Connection::open(db_path)?;
 
+    // Enable WAL mode for concurrent Tauri + MCP binary access.
+    // MUST use ? (not .ok()) — WAL failure is a hard error for Phase 2+.
+    // WAL is persistent: once set on a DB file, all future connections inherit it.
+    conn.execute_batch("PRAGMA journal_mode=WAL;")?;
+    // Recommended companion pragma for WAL — reduces fsync frequency while
+    // maintaining crash safety (WAL provides the extra durability layer).
+    conn.execute_batch("PRAGMA synchronous=NORMAL;")?;
+
     conn.execute_batch("
         CREATE TABLE IF NOT EXISTS scan_sessions (
             id TEXT PRIMARY KEY,
