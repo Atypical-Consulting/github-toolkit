@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 1 of 6 (Realtime Scan UI)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-02-26 — Roadmap created from requirements and research
+Plan: 1 of 3 in current phase
+Status: Executing
+Last activity: 2026-02-26 — Completed Plan 01: ScanProgress wiring (incremental events + listener lifecycle)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 5%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 3 min
+- Total execution time: 0.05 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-realtime-scan-ui | 1 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: —
+- Last 5 plans: 3 min
 - Trend: —
 
 *Updated after each plan completion*
@@ -45,6 +45,9 @@ Recent decisions affecting current work:
 - [Roadmap]: MCP server is a separate Cargo binary using stdio transport (not embedded in Tauri process)
 - [Roadmap]: Realtime UI fix is frontend-only — ScanProgress struct extension + scan.slice.ts update
 - [Roadmap]: Shared library crate (github_automate_lib) extracts business logic so both binaries link without duplication
+- [01-01]: Emit report: Some(report) per-repo in scan-progress events rather than only at scan end — core enabler of live health updates
+- [01-01]: Module-level currentUnlisten ref (not closure) prevents duplicate event listeners across HMR reloads
+- [01-01]: Safety-net setReports() retained after scanAllRepositories resolves to handle any missed events
 
 ### Pending Todos
 
@@ -59,5 +62,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Roadmap written — ready to plan Phase 1
+Stopped at: Completed 01-01-PLAN.md (ScanProgress wiring — per-repo events + listener lifecycle)
 Resume file: None
