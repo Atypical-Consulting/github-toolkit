@@ -1,3 +1,4 @@
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter, State};
 use crate::github::error::GitHubError;
 use crate::github::types::RepoSummary;
@@ -8,6 +9,15 @@ use super::types::{CachedRepoHealthReport, DiagnosticResult, RepoHealthReport, R
 use serde::{Serialize, Deserialize};
 use specta::Type;
 
+/// Shared cancellation flag for scan operations.
+pub struct ScanCancellationFlag(pub AtomicBool);
+
+#[tauri::command]
+#[specta::specta]
+pub fn cancel_scan(flag: State<ScanCancellationFlag>) {
+    flag.0.store(true, Ordering::Relaxed);
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ScanProgress {
@@ -15,6 +25,7 @@ pub struct ScanProgress {
     pub completed: u32,
     pub current_repo: String,
     pub from_cache: bool,
+    pub report: Option<RepoHealthReport>,
 }
 
 #[tauri::command]
@@ -64,17 +75,34 @@ pub async fn scan_all_repositories(
     repos: Vec<RepoSummary>,
     app_handle: AppHandle,
     db: State<'_, DbState>,
+    cancel_flag: State<'_, ScanCancellationFlag>,
 ) -> Result<Vec<CachedRepoHealthReport>, GitHubError> {
+    // Reset the cancellation flag at the start of each scan
+    cancel_flag.0.store(false, Ordering::Relaxed);
+
     let engine = DiagnosticsEngine::new();
     let total = repos.len() as u32;
     let mut reports = Vec::new();
 
     for (i, repo) in repos.iter().enumerate() {
+        // Check cancellation before each repo
+        if cancel_flag.0.load(Ordering::Relaxed) {
+            let _ = app_handle.emit("scan-progress", ScanProgress {
+                total,
+                completed: i as u32,
+                current_repo: String::new(),
+                from_cache: false,
+                report: None,
+            });
+            return Err(GitHubError::Cancelled);
+        }
+
         let _ = app_handle.emit("scan-progress", ScanProgress {
             total,
             completed: i as u32,
             current_repo: repo.full_name.clone(),
             from_cache: false,
+            report: None,
         });
 
         // 1. Fetch current HEAD SHA
@@ -88,18 +116,26 @@ pub async fn scan_all_repositories(
             Ok(sha) => sha,
             Err(e) => {
                 eprintln!("Failed to fetch SHA for {}: {:?}", repo.full_name, e);
+                let error_report = RepoHealthReport {
+                    repo_full_name: repo.full_name.clone(),
+                    owner: repo.owner.clone(),
+                    repo_name: repo.name.clone(),
+                    health_score: 0.0,
+                    critical_count: 0,
+                    warning_count: 0,
+                    info_count: 0,
+                    results: vec![],
+                    scanned_at: chrono::Utc::now().to_rfc3339(),
+                };
+                let _ = app_handle.emit("scan-progress", ScanProgress {
+                    total,
+                    completed: (i + 1) as u32,
+                    current_repo: repo.full_name.clone(),
+                    from_cache: false,
+                    report: Some(error_report.clone()),
+                });
                 reports.push(CachedRepoHealthReport {
-                    report: RepoHealthReport {
-                        repo_full_name: repo.full_name.clone(),
-                        owner: repo.owner.clone(),
-                        repo_name: repo.name.clone(),
-                        health_score: 0.0,
-                        critical_count: 0,
-                        warning_count: 0,
-                        info_count: 0,
-                        results: vec![],
-                        scanned_at: chrono::Utc::now().to_rfc3339(),
-                    },
+                    report: error_report,
                     commit_sha: String::new(),
                     from_cache: false,
                 });
@@ -135,7 +171,10 @@ pub async fn scan_all_repositories(
                         }
                     }
                     // Also save the aggregate report (best-effort)
+                    // Ensure parent rows exist for FK constraints
+                    let _ = crate::storage::repos::upsert_repo(&db, repo);
                     let session_id = uuid::Uuid::new_v4().to_string();
+                    let _ = crate::storage::scan_sessions::insert_session(&db, &session_id, total);
                     if let Err(e) = crate::storage::diagnostics::insert_diagnostic_result(
                         &db, &session_id, &fresh_report, Some(&current_sha),
                     ) {
@@ -158,6 +197,7 @@ pub async fn scan_all_repositories(
             completed: (i + 1) as u32,
             current_repo: repo.full_name.clone(),
             from_cache,
+            report: Some(report.clone()),
         });
 
         reports.push(CachedRepoHealthReport {
@@ -172,6 +212,7 @@ pub async fn scan_all_repositories(
         completed: total,
         current_repo: String::new(),
         from_cache: false,
+        report: None,
     });
 
     Ok(reports)
@@ -318,7 +359,10 @@ pub async fn scan_repository_cached(
     }
 
     // Also save the aggregate report (best-effort, don't fail the scan)
+    // Ensure parent rows exist for FK constraints
+    let _ = crate::storage::repos::upsert_repo(&db, &repo_summary);
     let session_id = uuid::Uuid::new_v4().to_string();
+    let _ = crate::storage::scan_sessions::insert_session(&db, &session_id, 1);
     if let Err(e) = crate::storage::diagnostics::insert_diagnostic_result(
         &db, &session_id, &report, Some(&current_sha),
     ) {
