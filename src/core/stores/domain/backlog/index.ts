@@ -102,13 +102,13 @@ export const useBacklogStore = create<BacklogStore>()(
           const { commands } = await import("@/bindings");
           const result = await commands.generateBacklogFromScan(reports);
           if (result.status === "ok") {
-            const items = result.data as BacklogItem[];
-            set(
-              { items, isGenerating: false },
-              undefined,
-              "backlog/generate/ok",
+            const newItems = result.data as BacklogItem[];
+            set({ isGenerating: false }, undefined, "backlog/generate/ok");
+            await get().loadItems();
+            log.success(
+              "backlog",
+              `Generated ${newItems.length} new backlog items`,
             );
-            log.success("backlog", `Generated ${items.length} backlog items`);
           } else {
             set({ isGenerating: false }, undefined, "backlog/generate/error");
             log.error("backlog", "Failed to generate backlog");
