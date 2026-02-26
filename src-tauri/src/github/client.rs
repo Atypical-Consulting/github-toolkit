@@ -67,6 +67,7 @@ pub async fn github_post<T: Serialize>(path: &str, body: &T) -> Result<reqwest::
     check_response_status(resp).await
 }
 
+#[allow(dead_code)]
 pub async fn github_put<T: Serialize>(path: &str, body: &T) -> Result<reqwest::Response, GitHubError> {
     let access_token = token::get_token().await?;
     let client = reqwest::Client::new();
@@ -138,6 +139,7 @@ pub fn parse_next_page(link_header: &str) -> Option<u32> {
     })
 }
 
+#[allow(dead_code)]
 pub fn extract_rate_limit(resp: &reqwest::Response) -> (Option<u32>, Option<u32>) {
     let remaining = resp
         .headers()

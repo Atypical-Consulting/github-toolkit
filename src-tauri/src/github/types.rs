@@ -5,9 +5,11 @@ use specta::Type;
 #[derive(Debug, Deserialize)]
 pub struct GitHubUserRef {
     pub login: String,
+    #[allow(dead_code)]
     pub avatar_url: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct GitHubLabel {
     pub id: u64,
@@ -16,6 +18,7 @@ pub struct GitHubLabel {
     pub description: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct GitHubIssue {
     pub number: u32,
@@ -33,6 +36,7 @@ pub struct GitHubIssue {
     pub pull_request: Option<serde_json::Value>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct GitHubComment {
     pub id: u64,
@@ -51,6 +55,7 @@ pub struct GitHubBranchCommit {
 
 #[derive(Debug, Deserialize)]
 pub struct GitHubBranch {
+    #[allow(dead_code)]
     pub name: String,
     pub commit: GitHubBranchCommit,
 }
@@ -75,6 +80,7 @@ pub struct GitHubRepo {
 
 #[derive(Debug, Deserialize)]
 pub struct GitHubLicense {
+    #[allow(dead_code)]
     pub spdx_id: Option<String>,
     pub name: String,
 }
@@ -95,6 +101,7 @@ pub struct GitHubFileContent {
     pub name: String,
     pub path: String,
     pub content: Option<String>,
+    #[allow(dead_code)]
     pub encoding: Option<String>,
     pub size: u64,
 }
@@ -154,6 +161,7 @@ pub struct IssueSummary {
     pub html_url: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct LabelInfo {
@@ -184,6 +192,7 @@ pub struct AuthResult {
 pub struct GitHubUser {
     pub login: String,
     pub avatar_url: String,
+    #[allow(dead_code)]
     pub name: Option<String>,
 }
 

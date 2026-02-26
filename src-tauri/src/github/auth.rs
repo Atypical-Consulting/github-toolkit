@@ -21,6 +21,7 @@ struct GitHubDeviceCodeResponse {
 #[derive(Debug, serde::Deserialize)]
 struct GitHubTokenResponse {
     access_token: Option<String>,
+    #[allow(dead_code)]
     token_type: Option<String>,
     scope: Option<String>,
     error: Option<String>,

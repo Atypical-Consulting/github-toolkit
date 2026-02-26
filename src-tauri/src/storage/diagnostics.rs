@@ -28,6 +28,7 @@ pub fn insert_diagnostic_result(
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn get_cached_diagnostic(
     db: &DbState,
     repo_full_name: &str,

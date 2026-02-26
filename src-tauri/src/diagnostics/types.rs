@@ -67,7 +67,9 @@ pub struct RepoContext {
     pub license_name: Option<String>,
     pub root_files: Vec<String>,
     pub workflow_files: Vec<String>,
+    #[allow(dead_code)]
     pub readme_content: Option<String>,
     pub readme_line_count: u32,
+    #[allow(dead_code)]
     pub pushed_at: Option<String>,
 }
