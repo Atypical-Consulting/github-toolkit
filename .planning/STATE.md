@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-02-26T10:30:13.352Z"
+status: in_progress
+last_updated: "2026-02-26T10:53:00.000Z"
 progress:
-  total_phases: 1
+  total_phases: 6
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 16
+  completed_plans: 4
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-26)
 
 **Core value:** Users see repo health updating live during scans, and AI tools can scan, query, and fix repos via MCP.
-**Current focus:** Phase 1 — Realtime Scan UI
+**Current focus:** Phase 2 — MCP Foundation
 
 ## Current Position
 
-Phase: 1 of 6 (Realtime Scan UI)
-Plan: 3 of 3 in current phase
-Status: Phase Complete
-Last activity: 2026-02-26 — Completed Plan 03: Integration verification — all 5 SCAN requirements confirmed (SCAN-01 through SCAN-05)
+Phase: 2 of 6 (MCP Foundation)
+Plan: 1 of 3 in current phase
+Status: In Progress
+Last activity: 2026-02-26 — Completed Plan 01: MCP binary target with rmcp deps, error sanitization, stderr tracing
 
-Progress: [███░░░░░░░] 15%
+Progress: [████░░░░░░] 25%
 
 ## Performance Metrics
 
@@ -65,6 +65,8 @@ Recent decisions affecting current work:
 - [01-02]: RepoRow uses useCallback selectors for per-row Zustand subscriptions to prevent full-list re-renders on every scan-progress event
 - [01-03]: Diagnostic breakdown counts (criticalCount/warningCount) rendered inline below repo description — only shown when non-zero to keep healthy repos visually clean
 - [01-03]: Full-stack smoke test order established: cargo build → tsc --noEmit → npm run check → human visual verification
+- [02-01]: CallToolResult::error(vec![Content::text(msg)]) is the correct rmcp 0.16 API for error results — not Default::default()
+- [02-01]: tracing crate added as direct dependency for binary-level logging macros
 
 ### Pending Todos
 
@@ -79,5 +81,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 01-03-PLAN.md (Integration verification — all 5 SCAN requirements confirmed)
+Stopped at: Completed 02-01-PLAN.md (MCP binary target with rmcp deps, error sanitization, stderr tracing)
 Resume file: None

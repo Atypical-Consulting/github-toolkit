@@ -17,13 +17,13 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### MCP Server Foundation
 
-- [ ] **MCP-01**: MCP server runs as a separate Rust binary using stdio transport
+- [x] **MCP-01**: MCP server runs as a separate Rust binary using stdio transport
 - [ ] **MCP-02**: SQLite database uses WAL mode for concurrent access by Tauri app and MCP binary
 - [ ] **MCP-03**: MCP server declares `tools` capability and returns all tools via `tools/list`
 - [ ] **MCP-04**: Every tool has a well-formed JSON Schema `inputSchema` and human-readable description
 - [ ] **MCP-05**: Tool execution errors return structured responses with `isError: true`
-- [ ] **MCP-06**: MCP binary uses stderr-only logging (stdout reserved for JSON-RPC)
-- [ ] **MCP-07**: Shared business logic (diagnostics engine, GitHub client, storage) extracted to library crate used by both binaries
+- [x] **MCP-06**: MCP binary uses stderr-only logging (stdout reserved for JSON-RPC)
+- [x] **MCP-07**: Shared business logic (diagnostics engine, GitHub client, storage) extracted to library crate used by both binaries
 
 ### MCP Query Tools
 
@@ -97,13 +97,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCAN-03 | Phase 1 | Complete |
 | SCAN-04 | Phase 1 | Complete |
 | SCAN-05 | Phase 1 | Complete |
-| MCP-01 | Phase 2 | Pending |
+| MCP-01 | Phase 2 | Complete |
 | MCP-02 | Phase 2 | Pending |
 | MCP-03 | Phase 2 | Pending |
 | MCP-04 | Phase 2 | Pending |
 | MCP-05 | Phase 2 | Pending |
-| MCP-06 | Phase 2 | Pending |
-| MCP-07 | Phase 2 | Pending |
+| MCP-06 | Phase 2 | Complete |
+| MCP-07 | Phase 2 | Complete |
 | QUERY-01 | Phase 3 | Pending |
 | QUERY-02 | Phase 3 | Pending |
 | QUERY-03 | Phase 3 | Pending |
