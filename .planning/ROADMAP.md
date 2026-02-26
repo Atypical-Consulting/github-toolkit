@@ -12,7 +12,7 @@ The existing app has a working scan pipeline and SQLite persistence. This milest
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Realtime Scan UI** - Health rings and diagnostic breakdowns update live per-repo during a scan
+- [x] **Phase 1: Realtime Scan UI** - Health rings and diagnostic breakdowns update live per-repo during a scan
 - [ ] **Phase 2: MCP Foundation** - Compilable MCP binary with correct logging, error types, WAL mode, and tool list endpoint
 - [ ] **Phase 3: MCP Query Tools** - Read-only tools for health scores, backlog items, and diagnostic rules
 - [ ] **Phase 4: MCP Scan Tools + Settings** - Scan tools with progress notifications and in-app MCP toggle UI
@@ -36,7 +36,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Extend ScanProgress Rust struct with per-repo report payload and rewrite scan.slice.ts event handler with listener lifecycle fix
 - [x] 01-02-PLAN.md — Add shimmer CSS, update health ring animation timing, extract RepoRow component with per-repo selectors
-- [ ] 01-03-PLAN.md — Integration smoke test and visual verification of all SCAN requirements
+- [x] 01-03-PLAN.md — Integration smoke test and visual verification of all SCAN requirements
 
 ### Phase 2: MCP Foundation
 **Goal**: A compilable `github-automate-mcp` binary exists, connects via stdio, responds to `tools/list`, and has correct logging, error sanitization, and WAL-mode SQLite
@@ -124,7 +124,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Realtime Scan UI | 2/3 | In Progress|  |
+| 1. Realtime Scan UI | 3/3 | Complete | 2026-02-26 |
 | 2. MCP Foundation | 0/3 | Not started | - |
 | 3. MCP Query Tools | 0/2 | Not started | - |
 | 4. MCP Scan Tools + Settings | 0/3 | Not started | - |

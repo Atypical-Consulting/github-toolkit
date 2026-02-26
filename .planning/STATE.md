@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 1 of 6 (Realtime Scan UI)
-Plan: 2 of 3 in current phase
-Status: Executing
-Last activity: 2026-02-26 — Completed Plan 02: Shimmer skeleton + RepoRow per-repo selectors (SCAN-03, SCAN-04)
+Plan: 3 of 3 in current phase
+Status: Phase Complete
+Last activity: 2026-02-26 — Completed Plan 03: Integration verification — all 5 SCAN requirements confirmed (SCAN-01 through SCAN-05)
 
-Progress: [██░░░░░░░░] 10%
+Progress: [███░░░░░░░] 15%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 3.5 min
-- Total execution time: 0.12 hours
+- Total plans completed: 3
+- Average duration: 4 min
+- Total execution time: 0.20 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-realtime-scan-ui | 2 | 7 min | 3.5 min |
+| 01-realtime-scan-ui | 3 | 12 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 3 min, 4 min
+- Last 5 plans: 3 min, 4 min, 5 min
 - Trend: stable
 
 *Updated after each plan completion*
@@ -50,6 +50,8 @@ Recent decisions affecting current work:
 - [01-01]: Safety-net setReports() retained after scanAllRepositories resolves to handle any missed events
 - [01-02]: isScanning takes priority over stale report — shimmer shows even if a previous scan result exists, reflecting current in-flight state
 - [01-02]: RepoRow uses useCallback selectors for per-row Zustand subscriptions to prevent full-list re-renders on every scan-progress event
+- [01-03]: Diagnostic breakdown counts (criticalCount/warningCount) rendered inline below repo description — only shown when non-zero to keep healthy repos visually clean
+- [01-03]: Full-stack smoke test order established: cargo build → tsc --noEmit → npm run check → human visual verification
 
 ### Pending Todos
 
@@ -64,5 +66,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 01-02-PLAN.md (Shimmer skeleton + RepoRow per-repo selectors — SCAN-03, SCAN-04)
+Stopped at: Completed 01-03-PLAN.md (Integration verification — all 5 SCAN requirements confirmed)
 Resume file: None
