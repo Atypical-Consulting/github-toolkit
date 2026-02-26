@@ -3,11 +3,7 @@ import { useNavigationStore } from "@/core/stores/navigation";
 import { useDiagnosticsStore } from "@/core/stores/domain/diagnostics";
 import { useGitHubStore } from "@/core/stores/domain/github";
 import { useBacklogStore } from "@/core/stores/domain/backlog";
-import type {
-  RepoHealthReport,
-  DiagnosticResult,
-} from "@/core/stores/domain/diagnostics/results.slice";
-import type { RuleInfo } from "@/bindings";
+import type { DiagnosticResult } from "@/core/stores/domain/diagnostics/results.slice";
 import { cn } from "@/core/lib/cn";
 import {
   ArrowLeft,
@@ -27,6 +23,7 @@ import {
   GitCommit,
   ListChecks,
   Play,
+  Plus,
 } from "lucide-react";
 
 interface Props {
@@ -36,134 +33,76 @@ interface Props {
 export function RepoDetailsPage({ repoFullName }: Props) {
   const { goBack } = useNavigationStore();
   const { repos } = useGitHubStore();
-  const { reports, updateReport } = useDiagnosticsStore();
-  const { items: backlogItems } = useBacklogStore();
-  const [isRescanning, setIsRescanning] = useState(false);
-  const [dbReport, setDbReport] = useState<RepoHealthReport | null>(null);
-  const [commitSha, setCommitSha] = useState<string | null>(null);
-  const [fromCache, setFromCache] = useState<boolean | null>(null);
-  const [scanError, setScanError] = useState<string | null>(null);
-  const [scanningRuleId, setScanningRuleId] = useState<string | null>(null);
-  const [ruleOverrides, setRuleOverrides] = useState<
-    Map<string, DiagnosticResult>
-  >(new Map());
-  const [allRules, setAllRules] = useState<RuleInfo[]>([]);
+  const {
+    reports,
+    rules,
+    loadRules,
+    loadReportForRepo,
+    rescanRepo,
+    scanRule,
+    isRepoRescanning,
+    getRepoScanError,
+    getScanningRuleId,
+    getRuleOverrides,
+    getRepoScanMeta,
+  } = useDiagnosticsStore();
+  const { items: backlogItems, createFromDiagnostic } = useBacklogStore();
+  const [creatingBacklogRuleId, setCreatingBacklogRuleId] = useState<
+    string | null
+  >(null);
 
   const repo = repos.find((r) => r.fullName === repoFullName);
-  const inMemoryReport = reports.get(repoFullName);
-  const baseReport = inMemoryReport ?? dbReport;
+  const baseReport = reports[repoFullName] ?? null;
+  const isRescanning = isRepoRescanning(repoFullName);
+  const scanError = getRepoScanError(repoFullName);
+  const scanningRuleId = getScanningRuleId(repoFullName);
+  const ruleOverrides = getRuleOverrides(repoFullName);
+  const scanMeta = getRepoScanMeta(repoFullName);
 
-  // Build a map of ruleId -> DiagnosticResult from the report + overrides
-  const resultsByRuleId = new Map<string, DiagnosticResult>();
+  // Build a record of ruleId -> DiagnosticResult from the report + overrides
+  const resultsByRuleId: Record<string, DiagnosticResult> = {};
   if (baseReport) {
     for (const r of baseReport.results) {
-      resultsByRuleId.set(r.ruleId, r);
+      resultsByRuleId[r.ruleId] = r;
     }
   }
-  for (const [id, r] of ruleOverrides) {
-    resultsByRuleId.set(id, r);
+  for (const [id, r] of Object.entries(ruleOverrides)) {
+    resultsByRuleId[id] = r;
   }
 
   const repoBacklogItems = backlogItems.filter(
     (i) => i.repoFullName === repoFullName,
   );
 
-  // Load rules list + cached diagnostics on mount
+  // Load rules + report on mount
   useEffect(() => {
     loadRules();
-    if (!inMemoryReport) {
-      loadCachedDiagnostics();
-    }
-  }, [repoFullName, inMemoryReport]);
+    loadReportForRepo(repoFullName);
+  }, [repoFullName, loadRules, loadReportForRepo]);
 
-  async function loadRules() {
-    try {
-      const { commands } = await import("@/bindings");
-      const rules = await commands.listDiagnosticRules();
-      setAllRules(rules);
-    } catch {
-      // fallback: empty
-    }
-  }
-
-  async function loadCachedDiagnostics() {
-    try {
-      const { commands } = await import("@/bindings");
-      const result = await commands.getRepoDiagnostics(repoFullName);
-      if (result.status === "ok" && result.data) {
-        setDbReport(result.data);
-      }
-    } catch {
-      // silently fail
-    }
-  }
-
-  async function handleRescan() {
+  function handleRescan() {
     if (!repo) return;
-    setIsRescanning(true);
-    setScanError(null);
-    try {
-      const { commands } = await import("@/bindings");
-      const result = await commands.scanRepositoryCached(
-        repo.owner,
-        repo.name,
-        repo.defaultBranch,
-      );
-      if (result.status === "ok") {
-        const {
-          report: freshReport,
-          commitSha: sha,
-          fromCache: cached,
-        } = result.data;
-        // Clear overrides only after we have a successful full report
-        setRuleOverrides(new Map());
-        setDbReport(freshReport);
-        setCommitSha(sha);
-        setFromCache(cached);
-        updateReport(freshReport);
-      } else {
-        const msg = typeof result.error === "object" && result.error !== null
-          ? JSON.stringify(result.error)
-          : String(result.error);
-        setScanError(msg);
-        console.error("Scan All failed:", result.error);
-      }
-    } catch (e) {
-      setScanError(String(e));
-      console.error("Scan All error:", e);
-    } finally {
-      setIsRescanning(false);
-    }
+    rescanRepo(repoFullName, repo.owner, repo.name, repo.defaultBranch);
   }
 
-  async function handleScanRule(ruleId: string) {
+  function handleScanRule(ruleId: string) {
     if (!repo) return;
-    setScanningRuleId(ruleId);
+    scanRule(repoFullName, repo.owner, repo.name, ruleId);
+  }
+
+  async function handleCreateBacklogItem(ruleId: string) {
+    const result = resultsByRuleId[ruleId];
+    if (!result || result.passed || !baseReport) return;
+    setCreatingBacklogRuleId(ruleId);
     try {
-      const { commands } = await import("@/bindings");
-      const result = await commands.scanSingleDiagnostic(
-        repo.owner,
-        repo.name,
-        ruleId,
-      );
-      if (result.status === "ok") {
-        setRuleOverrides((prev) => {
-          const next = new Map(prev);
-          next.set(ruleId, result.data);
-          return next;
-        });
-      } else {
-        console.error(`Scan rule ${ruleId} failed:`, result.error);
-      }
-    } catch (e) {
-      console.error(`Scan rule ${ruleId} error:`, e);
+      await createFromDiagnostic(baseReport, result);
     } finally {
-      setScanningRuleId(null);
+      setCreatingBacklogRuleId(null);
     }
   }
 
   // Compute summary from all available results
-  const scannedResults = Array.from(resultsByRuleId.values());
+  const scannedResults = Object.values(resultsByRuleId);
   const hasAnyResults = scannedResults.length > 0;
   const healthScore = baseReport?.healthScore ?? null;
   const criticalCount = scannedResults.filter(
@@ -192,7 +131,7 @@ export function RepoDetailsPage({ repoFullName }: Props) {
   const groupedRules = severityOrder
     .map((severity) => ({
       severity,
-      rules: allRules.filter(
+      rules: rules.filter(
         (rule) => rule.severity.toLowerCase() === severity,
       ),
     }))
@@ -324,11 +263,11 @@ export function RepoDetailsPage({ repoFullName }: Props) {
                 {formatRelativeDate(baseReport.scannedAt)}
               </span>
             )}
-            {commitSha && (
+            {scanMeta && (
               <span className="flex items-center gap-1.5 font-mono text-[11px] text-text-dim/60">
                 <GitCommit className="h-3 w-3" />
-                {commitSha.slice(0, 7)}
-                {fromCache && (
+                {scanMeta.commitSha.slice(0, 7)}
+                {scanMeta.fromCache && (
                   <span className="rounded bg-accent/10 px-1.5 py-0.5 text-[10px] text-accent">
                     cached
                   </span>
@@ -376,7 +315,7 @@ export function RepoDetailsPage({ repoFullName }: Props) {
       )}
 
       {/* ── Diagnostic Rules ─────────────────────────────── */}
-      {allRules.length > 0 && (
+      {rules.length > 0 && (
         <div className="mb-6 rounded-xl border border-border-subtle bg-surface-raised/30">
           <div className="flex items-center gap-2 border-b border-border-subtle px-5 py-3">
             <ListChecks className="h-4 w-4 text-text-dim" />
@@ -384,7 +323,7 @@ export function RepoDetailsPage({ repoFullName }: Props) {
               Diagnostic Rules
             </span>
             <span className="font-mono text-[11px] text-text-dim">
-              {allRules.length} rules
+              {rules.length} rules
             </span>
             {hasAnyResults && (
               <span className="font-mono text-[11px] text-text-dim/50">
@@ -408,9 +347,15 @@ export function RepoDetailsPage({ repoFullName }: Props) {
 
                 <div className="divide-y divide-border-subtle/30">
                   {rules.map((rule) => {
-                    const result = resultsByRuleId.get(rule.id);
+                    const result = resultsByRuleId[rule.id];
                     const isScanning = scanningRuleId === rule.id;
                     const hasResult = result != null;
+                    const isFailed = hasResult && !result.passed;
+                    const hasBacklogItem = repoBacklogItems.some(
+                      (i) => i.sourceRef === rule.id,
+                    );
+                    const isCreatingBacklog =
+                      creatingBacklogRuleId === rule.id;
 
                     return (
                       <div
@@ -470,6 +415,31 @@ export function RepoDetailsPage({ repoFullName }: Props) {
                           )}
                           Run
                         </button>
+
+                        {/* Create backlog button (only for failed rules without existing backlog item) */}
+                        {isFailed && !hasBacklogItem && (
+                          <button
+                            onClick={() => handleCreateBacklogItem(rule.id)}
+                            disabled={
+                              isCreatingBacklog ||
+                              creatingBacklogRuleId !== null
+                            }
+                            className={cn(
+                              "flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 font-display text-[11px] font-medium transition-colors",
+                              isCreatingBacklog
+                                ? "cursor-not-allowed bg-surface-hover text-text-dim"
+                                : "text-accent hover:bg-accent/10 hover:text-accent",
+                            )}
+                            title={`Create backlog item for "${rule.name}"`}
+                          >
+                            {isCreatingBacklog ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Plus className="h-3 w-3" />
+                            )}
+                            Backlog
+                          </button>
+                        )}
 
                         {/* Status badge */}
                         {hasResult ? (

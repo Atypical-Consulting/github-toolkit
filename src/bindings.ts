@@ -128,6 +128,9 @@ async scanSingleDiagnostic(owner: string, repo: string, ruleId: string) : Promis
 async listDiagnosticRules() : Promise<RuleInfo[]> {
     return await TAURI_INVOKE("list_diagnostic_rules");
 },
+async cancelScan() : Promise<void> {
+    await TAURI_INVOKE("cancel_scan");
+},
 async persistRepos(repos: RepoSummary[]) : Promise<Result<null, GitHubError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("persist_repos", { repos }) };
@@ -220,6 +223,7 @@ export type RepoListResponse = { items: RepoSummary[]; hasNextPage: boolean; nex
 export type RepoSummary = { fullName: string; owner: string; name: string; description: string | null; defaultBranch: string; topics: string[]; isArchived: boolean; isPrivate: boolean; hasIssues: boolean; openIssuesCount: number; pushedAt: string | null; htmlUrl: string; licenseName: string | null }
 export type RuleInfo = { id: string; name: string; severity: Severity }
 export type Severity = "critical" | "warning" | "info"
+export type ScanProgress = { total: number; completed: number; currentRepo: string; fromCache: boolean; report: RepoHealthReport | null }
 
 /** tauri-specta globals **/
 

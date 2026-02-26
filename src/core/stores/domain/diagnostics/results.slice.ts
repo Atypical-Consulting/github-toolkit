@@ -1,5 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { DiagnosticsStore } from "./index";
+import { log } from "@/core/stores/log";
 
 export interface RepoHealthReport {
   repoFullName: string;
@@ -22,11 +23,12 @@ export interface DiagnosticResult {
 }
 
 export interface ResultsSlice {
-  reports: Map<string, RepoHealthReport>;
+  reports: Record<string, RepoHealthReport>;
   diagnosticsCacheLoaded: boolean;
   setReports: (reports: RepoHealthReport[]) => void;
   updateReport: (report: RepoHealthReport) => void;
   loadCachedDiagnostics: () => Promise<void>;
+  loadReportForRepo: (repoFullName: string) => Promise<void>;
   getReportForRepo: (fullName: string) => RepoHealthReport | undefined;
   getHealthDistribution: () => { healthy: number; warning: number; critical: number };
 }
@@ -37,21 +39,23 @@ export const createResultsSlice: StateCreator<
   [],
   ResultsSlice
 > = (set, get) => ({
-  reports: new Map(),
+  reports: {},
   diagnosticsCacheLoaded: false,
 
   setReports: (reports) => {
-    const map = new Map<string, RepoHealthReport>();
+    const record: Record<string, RepoHealthReport> = {};
     for (const report of reports) {
-      map.set(report.repoFullName, report);
+      record[report.repoFullName] = report;
     }
-    set({ reports: map }, undefined, "results/set");
+    set({ reports: record }, undefined, "results/set");
   },
 
   updateReport: (report) => {
-    const current = new Map(get().reports);
-    current.set(report.repoFullName, report);
-    set({ reports: current }, undefined, "results/updateOne");
+    set(
+      (state) => ({ reports: { ...state.reports, [report.repoFullName]: report } }),
+      undefined,
+      "results/updateOne",
+    );
   },
 
   loadCachedDiagnostics: async () => {
@@ -59,25 +63,45 @@ export const createResultsSlice: StateCreator<
       const { commands } = await import("@/bindings");
       const result = await commands.loadAllDiagnostics();
       if (result.status === "ok" && result.data.length > 0) {
-        const map = new Map<string, RepoHealthReport>();
+        const record: Record<string, RepoHealthReport> = {};
         for (const report of result.data) {
-          map.set(report.repoFullName, report);
+          record[report.repoFullName] = report;
         }
-        set({ reports: map, diagnosticsCacheLoaded: true }, undefined, "results/loadCache");
+        set({ reports: record, diagnosticsCacheLoaded: true }, undefined, "results/loadCache");
+        log.info("diagnostics", `Loaded ${result.data.length} cached reports`);
       } else {
         set({ diagnosticsCacheLoaded: true }, undefined, "results/loadCache/empty");
       }
-    } catch {
+    } catch (e) {
       set({ diagnosticsCacheLoaded: true }, undefined, "results/loadCache/error");
+      log.warn("diagnostics", `Cache load failed: ${String(e)}`);
+    }
+  },
+
+  loadReportForRepo: async (repoFullName) => {
+    if (get().reports[repoFullName]) return;
+    try {
+      const { commands } = await import("@/bindings");
+      const result = await commands.getRepoDiagnostics(repoFullName);
+      if (result.status === "ok" && result.data) {
+        const report = result.data;
+        set(
+          (state) => ({ reports: { ...state.reports, [repoFullName]: report } }),
+          undefined,
+          "results/loadForRepo",
+        );
+      }
+    } catch (e) {
+      log.warn("diagnostics", `Failed to load report for ${repoFullName}: ${String(e)}`);
     }
   },
 
   getReportForRepo: (fullName) => {
-    return get().reports.get(fullName);
+    return get().reports[fullName];
   },
 
   getHealthDistribution: () => {
-    const reports = Array.from(get().reports.values());
+    const reports = Object.values(get().reports);
     return {
       healthy: reports.filter((r) => r.healthScore >= 80).length,
       warning: reports.filter((r) => r.healthScore >= 40 && r.healthScore < 80).length,

@@ -12,7 +12,7 @@ use github::{
     github_list_user_repos, github_list_org_repos, github_get_repo_contents, github_get_file_content,
     github_create_issue, github_check_rate_limit,
 };
-use diagnostics::{get_repo_diagnostics, list_diagnostic_rules, scan_all_repositories, scan_repository, scan_repository_cached, scan_single_diagnostic};
+use diagnostics::{get_repo_diagnostics, list_diagnostic_rules, scan_all_repositories, scan_repository, scan_repository_cached, scan_single_diagnostic, cancel_scan, ScanCancellationFlag};
 use storage::{persist_repos, load_cached_repos, load_all_diagnostics};
 use backlog::{
     generate_backlog_from_scan, list_backlog, update_backlog_item_status,
@@ -43,6 +43,7 @@ pub fn run() {
         get_repo_diagnostics,
         scan_single_diagnostic,
         list_diagnostic_rules,
+        cancel_scan,
         // Storage / cache commands
         persist_repos,
         load_cached_repos,
@@ -80,6 +81,7 @@ pub fn run() {
             let app_data_dir = app.path().app_data_dir().expect("Failed to get app data dir");
             let conn = storage::init_db(&app_data_dir).expect("Failed to initialize database");
             app.manage(storage::DbState(std::sync::Mutex::new(conn)));
+            app.manage(ScanCancellationFlag(std::sync::atomic::AtomicBool::new(false)));
 
             builder.mount_events(app);
 

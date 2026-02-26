@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Header } from "@/core/components/Header";
+import { ToastOverlay } from "@/core/components/ToastOverlay";
 import { AuthScreen } from "@/extensions/settings/AuthScreen";
 import { Dashboard } from "@/extensions/dashboard/Dashboard";
 import { RepoDetailsPage } from "@/extensions/repo-details/RepoDetailsPage";
@@ -36,6 +37,7 @@ export default function App() {
           <RepoDetailsPage repoFullName={currentView.repoFullName} />
         )}
       </main>
+      <ToastOverlay />
     </div>
   );
 }

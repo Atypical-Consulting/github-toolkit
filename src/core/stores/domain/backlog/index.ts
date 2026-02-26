@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
+import { log } from "@/core/stores/log";
 
 export interface BacklogItem {
   id: string;
@@ -27,10 +28,13 @@ interface BacklogFilters {
 interface BacklogStore {
   items: BacklogItem[];
   isLoading: boolean;
+  isGenerating: boolean;
+  isCreatingIssue: boolean;
   error: string | null;
   filters: BacklogFilters;
   loadItems: () => Promise<void>;
   generateFromScan: (reports: any[]) => Promise<void>;
+  createFromDiagnostic: (baseReport: any, failedResult: any) => Promise<void>;
   updateStatus: (id: string, status: string) => Promise<void>;
   createGitHubIssue: (itemId: string) => Promise<void>;
   setFilter: (key: keyof BacklogFilters, value: string | null) => void;
@@ -50,6 +54,8 @@ export const useBacklogStore = create<BacklogStore>()(
     (set, get) => ({
       items: [],
       isLoading: false,
+      isGenerating: false,
+      isCreatingIssue: false,
       error: null,
       filters: { ...defaultFilters },
 
@@ -61,22 +67,60 @@ export const useBacklogStore = create<BacklogStore>()(
           if (result.status === "ok") {
             set({ items: result.data as BacklogItem[], isLoading: false }, undefined, "backlog/load/ok");
           } else {
-            set({ error: "Failed to load backlog", isLoading: false });
+            set({ error: "Failed to load backlog", isLoading: false }, undefined, "backlog/load/error");
+            log.error("backlog", "Failed to load backlog items");
           }
         } catch (e) {
-          set({ error: String(e), isLoading: false });
+          set({ error: String(e), isLoading: false }, undefined, "backlog/load/error");
+          log.error("backlog", `Load error: ${String(e)}`);
         }
       },
 
       generateFromScan: async (reports) => {
+        if (get().isGenerating) {
+          log.warn("backlog", "Generation already in progress");
+          return;
+        }
+        set({ isGenerating: true, error: null }, undefined, "backlog/generate");
+        log.info("backlog", `Generating backlog from ${reports.length} reports...`);
         try {
           const { commands } = await import("@/bindings");
           const result = await commands.generateBacklogFromScan(reports);
           if (result.status === "ok") {
-            set({ items: result.data as BacklogItem[] }, undefined, "backlog/generate/ok");
+            const items = result.data as BacklogItem[];
+            set({ items, isGenerating: false }, undefined, "backlog/generate/ok");
+            log.success("backlog", `Generated ${items.length} backlog items`);
+          } else {
+            set({ isGenerating: false }, undefined, "backlog/generate/error");
+            log.error("backlog", "Failed to generate backlog");
           }
         } catch (e) {
-          set({ error: String(e) });
+          set({ error: String(e), isGenerating: false }, undefined, "backlog/generate/error");
+          log.error("backlog", `Generate error: ${String(e)}`);
+        }
+      },
+
+      createFromDiagnostic: async (baseReport, failedResult) => {
+        try {
+          const { commands } = await import("@/bindings");
+          const miniReport = {
+            repoFullName: baseReport.repoFullName,
+            owner: baseReport.owner,
+            repoName: baseReport.repoName,
+            healthScore: baseReport.healthScore,
+            criticalCount: baseReport.criticalCount,
+            warningCount: baseReport.warningCount,
+            infoCount: baseReport.infoCount,
+            results: [failedResult],
+            scannedAt: baseReport.scannedAt,
+          };
+          const res = await commands.generateBacklogFromScan([miniReport]);
+          if (res.status === "ok") {
+            await get().loadItems();
+            log.success("backlog", `Created backlog item for "${failedResult.ruleName}"`);
+          }
+        } catch (e) {
+          log.error("backlog", `Failed to create item: ${String(e)}`);
         }
       },
 
@@ -85,18 +129,28 @@ export const useBacklogStore = create<BacklogStore>()(
           const { commands } = await import("@/bindings");
           await commands.updateBacklogItemStatus(id, status);
           await get().loadItems();
+          log.info("backlog", `Status updated to "${status}"`);
         } catch (e) {
-          set({ error: String(e) });
+          set({ error: String(e) }, undefined, "backlog/updateStatus/error");
+          log.error("backlog", `Status update error: ${String(e)}`);
         }
       },
 
       createGitHubIssue: async (itemId) => {
+        if (get().isCreatingIssue) {
+          log.warn("backlog", "Issue creation already in progress");
+          return;
+        }
+        set({ isCreatingIssue: true }, undefined, "backlog/createIssue");
         try {
           const { commands } = await import("@/bindings");
           await commands.createGithubIssueFromBacklog(itemId);
           await get().loadItems();
+          set({ isCreatingIssue: false }, undefined, "backlog/createIssue/ok");
+          log.success("backlog", "GitHub issue created");
         } catch (e) {
-          set({ error: String(e) });
+          set({ error: String(e), isCreatingIssue: false }, undefined, "backlog/createIssue/error");
+          log.error("backlog", `Issue creation error: ${String(e)}`);
         }
       },
 

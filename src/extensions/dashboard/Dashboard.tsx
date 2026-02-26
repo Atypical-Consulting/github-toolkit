@@ -28,6 +28,7 @@ import {
   Eye,
   ArrowUpRight,
   Command,
+  Square,
 } from "lucide-react";
 
 type Tab = "overview" | "repositories" | "backlog";
@@ -36,7 +37,7 @@ type Tab = "overview" | "repositories" | "backlog";
 
 export function Dashboard() {
   const { repos, reposLoading, reposCacheLoaded, loadCachedRepos, fetchAllRepos } = useGitHubStore();
-  const { isScanRunning, scanProgress, startScan, reports, diagnosticsCacheLoaded, loadCachedDiagnostics, getHealthDistribution } =
+  const { isScanRunning, scanProgress, startScan, cancelScan, reports, diagnosticsCacheLoaded, loadCachedDiagnostics, loadRules, getHealthDistribution } =
     useDiagnosticsStore();
   const { items: backlogItems, generateFromScan } = useBacklogStore();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -56,11 +57,13 @@ export function Dashboard() {
     if (!diagnosticsCacheLoaded) {
       loadCachedDiagnostics();
     }
-  }, [diagnosticsCacheLoaded, loadCachedDiagnostics]);
+    loadRules();
+  }, [diagnosticsCacheLoaded, loadCachedDiagnostics, loadRules]);
 
   const distribution = getHealthDistribution();
-  const hasReports = reports.size > 0;
-  const scannedCount = reports.size;
+  const reportCount = Object.keys(reports).length;
+  const hasReports = reportCount > 0;
+  const scannedCount = reportCount;
 
   const handleScan = async () => {
     if (repos.length > 0 && !isScanRunning) {
@@ -69,7 +72,7 @@ export function Dashboard() {
   };
 
   const handleGenerateBacklog = async () => {
-    const allReports = Array.from(reports.values());
+    const allReports = Object.values(reports);
     if (allReports.length > 0) {
       await generateFromScan(allReports);
     }
@@ -128,29 +131,27 @@ export function Dashboard() {
               Generate Backlog
             </button>
           )}
-          <button
-            onClick={handleScan}
-            disabled={isScanRunning || repos.length === 0 || reposLoading}
-            className={cn(
-              "flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 font-display text-[12px] font-semibold transition-all",
-              isScanRunning
-                ? "bg-error/12 text-error"
-                : "bg-accent/12 text-accent hover:bg-accent/20",
-              (repos.length === 0 || reposLoading) && "cursor-not-allowed opacity-40",
-            )}
-          >
-            {isScanRunning ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Scanning...
-              </>
-            ) : (
-              <>
-                <Play className="h-3.5 w-3.5" fill="currentColor" />
-                Run Scan
-              </>
-            )}
-          </button>
+          {isScanRunning ? (
+            <button
+              onClick={cancelScan}
+              className="flex items-center gap-1.5 rounded-lg bg-error/12 px-3.5 py-1.5 font-display text-[12px] font-semibold text-error transition-all hover:bg-error/20"
+            >
+              <Square className="h-3 w-3" fill="currentColor" />
+              Stop Scan
+            </button>
+          ) : (
+            <button
+              onClick={handleScan}
+              disabled={repos.length === 0 || reposLoading}
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg bg-accent/12 px-3.5 py-1.5 font-display text-[12px] font-semibold text-accent transition-all hover:bg-accent/20",
+                (repos.length === 0 || reposLoading) && "cursor-not-allowed opacity-40",
+              )}
+            >
+              <Play className="h-3.5 w-3.5" fill="currentColor" />
+              Run Scan
+            </button>
+          )}
         </div>
       </div>
 
@@ -193,7 +194,7 @@ function OverviewTab({
   scannedCount: number;
   isScanRunning: boolean;
   scanProgress: { total: number; completed: number; currentRepo: string } | null;
-  reports: Map<string, any>;
+  reports: Record<string, any>;
 }) {
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
@@ -329,14 +330,14 @@ function ScanTerminal({
 }: {
   isScanRunning: boolean;
   scanProgress: { total: number; completed: number; currentRepo: string } | null;
-  reports: Map<string, any>;
+  reports: Record<string, any>;
   scannedCount: number;
 }) {
   const logEndRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(true);
 
   const logEntries = useMemo(() => {
-    return Array.from(reports.entries()).map(([name, report]) => ({
+    return Object.entries(reports).map(([name, report]) => ({
       repo: name,
       score: report.healthScore,
       critical: report.criticalCount,
@@ -588,7 +589,7 @@ function RepositoriesTab({
   reposLoading,
 }: {
   repos: any[];
-  reports: Map<string, any>;
+  reports: Record<string, any>;
   reposLoading: boolean;
 }) {
   const { navigateTo } = useNavigationStore();
@@ -610,8 +611,8 @@ function RepositoriesTab({
 
     if (sortBy === "score") {
       list.sort((a, b) => {
-        const sa = reports.get(a.fullName)?.healthScore ?? -1;
-        const sb = reports.get(b.fullName)?.healthScore ?? -1;
+        const sa = reports[a.fullName]?.healthScore ?? -1;
+        const sb = reports[b.fullName]?.healthScore ?? -1;
         return sa - sb;
       });
     } else if (sortBy === "issues") {
@@ -700,7 +701,7 @@ function RepositoriesTab({
             {/* Repo Cards */}
             <div className="space-y-1.5">
               {ownerRepos.map((repo) => {
-                const report = reports.get(repo.fullName);
+                const report = reports[repo.fullName];
 
                 return (
                   <div

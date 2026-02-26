@@ -33,36 +33,36 @@
 │  │  Shares AppHandle + DbState via Arc<AppHandle>                │  │
 │  │  Transport: stdio (launched as subprocess by MCP clients)     │  │
 │  └───────────────────────────────────────────────────────────────┘  │
-│         │                                                            │
-│  ┌──────┴───────────────────────────────────────────────────────┐    │
-│  │           Tauri IPC Boundary (tauri-specta auto-gen)         │    │
-│  │  collect_commands![] — all commands including mcp_toggle     │    │
-│  └──────┬───────────────────────────────────────────────────────┘    │
-│         │  Tauri events (scan-progress + scan-result per repo)       │
-└─────────┼────────────────────────────────────────────────────────────┘
+│         │                                                           │
+│  ┌──────┴────────────────────────────────────────────────────────┐  │
+│  │           Tauri IPC Boundary (tauri-specta auto-gen)          │  │
+│  │  collect_commands![] — all commands including mcp_toggle      │  │
+│  └──────┬────────────────────────────────────────────────────────┘  │
+│         │  Tauri events (scan-progress + scan-result per repo)      │
+└─────────┼───────────────────────────────────────────────────────────┘
           │  Tauri IPC commands + events
           ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                 Frontend State Layer (src/core/stores/)              │
-│                                                                      │
-│  useGitHubStore          useDiagnosticsStore       useBacklogStore   │
-│  ┌────────────────┐     ┌──────────────────────┐  ┌──────────────┐  │
-│  │ AuthSlice      │     │ ScanSlice (MODIFIED)  │  │ BacklogStore │  │
-│  │ ReposSlice     │     │   listen scan-progress│  └──────────────┘  │
+│                 Frontend State Layer (src/core/stores/)             │
+│                                                                     │
+│  useGitHubStore          useDiagnosticsStore       useBacklogStore  │
+│  ┌────────────────┐     ┌───────────────────────┐  ┌──────────────┐ │
+│  │ AuthSlice      │     │ ScanSlice (MODIFIED)  │  │ BacklogStore │ │
+│  │ ReposSlice     │     │   listen scan-progress│  └──────────────┘ │
 │  └────────────────┘     │   → updateReport()    │                   │
 │                         │   per repo, not batch │                   │
 │                         │ ResultsSlice          │                   │
 │                         │   reports: Record<>   │                   │
 │                         │ RulesSlice            │                   │
 │                         │ RepoDetailSlice       │                   │
-│                         └──────────────────────┘                   │
+│                         └───────────────────────┘                   │
 │                               │ subscriptions                       │
 └───────────────────────────────┼─────────────────────────────────────┘
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                   Frontend UI Layer (src/extensions/)                │
-│  Dashboard.tsx — health rings update per-repo as scan-result fires   │
+│                   Frontend UI Layer (src/extensions/)               │
+│  Dashboard.tsx — health rings update per-repo as scan-result fires  │
 │  RepoDetailsPage.tsx — per-rule breakdown                           │
 │  settings/ — MCP on/off toggle + port display                       │
 └─────────────────────────────────────────────────────────────────────┘
