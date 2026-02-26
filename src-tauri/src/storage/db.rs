@@ -102,3 +102,19 @@ pub fn init_db(app_data_dir: &Path) -> Result<Connection, rusqlite::Error> {
 
     Ok(conn)
 }
+
+/// Resolve the database path for standalone (non-Tauri) processes.
+///
+/// On macOS: ~/Library/Application Support/com.githubautomate.desktop/github-automate.db
+/// On Linux: ~/.local/share/com.githubautomate.desktop/github-automate.db
+/// On Windows: C:\Users\<user>\AppData\Roaming\com.githubautomate.desktop\github-automate.db
+///
+/// This matches the path Tauri uses via its bundle identifier.
+pub fn resolve_db_path() -> Result<std::path::PathBuf, String> {
+    // Tauri uses the platform data_dir + bundle identifier as the app data directory.
+    // The bundle identifier is "com.githubautomate.desktop" (from tauri.conf.json).
+    let data_dir = dirs::data_dir()
+        .ok_or_else(|| "Could not determine OS data directory".to_string())?;
+    let app_dir = data_dir.join("com.githubautomate.desktop");
+    Ok(app_dir.join("github-automate.db"))
+}
