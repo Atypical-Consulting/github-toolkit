@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 1 of 6 (Realtime Scan UI)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-02-26 — Completed Plan 01: ScanProgress wiring (incremental events + listener lifecycle)
+Last activity: 2026-02-26 — Completed Plan 02: Shimmer skeleton + RepoRow per-repo selectors (SCAN-03, SCAN-04)
 
-Progress: [█░░░░░░░░░] 5%
+Progress: [██░░░░░░░░] 10%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 3 min
-- Total execution time: 0.05 hours
+- Total plans completed: 2
+- Average duration: 3.5 min
+- Total execution time: 0.12 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-realtime-scan-ui | 1 | 3 min | 3 min |
+| 01-realtime-scan-ui | 2 | 7 min | 3.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 3 min
-- Trend: —
+- Last 5 plans: 3 min, 4 min
+- Trend: stable
 
 *Updated after each plan completion*
 
@@ -48,6 +48,8 @@ Recent decisions affecting current work:
 - [01-01]: Emit report: Some(report) per-repo in scan-progress events rather than only at scan end — core enabler of live health updates
 - [01-01]: Module-level currentUnlisten ref (not closure) prevents duplicate event listeners across HMR reloads
 - [01-01]: Safety-net setReports() retained after scanAllRepositories resolves to handle any missed events
+- [01-02]: isScanning takes priority over stale report — shimmer shows even if a previous scan result exists, reflecting current in-flight state
+- [01-02]: RepoRow uses useCallback selectors for per-row Zustand subscriptions to prevent full-list re-renders on every scan-progress event
 
 ### Pending Todos
 
@@ -62,5 +64,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 01-01-PLAN.md (ScanProgress wiring — per-repo events + listener lifecycle)
+Stopped at: Completed 01-02-PLAN.md (Shimmer skeleton + RepoRow per-repo selectors — SCAN-03, SCAN-04)
 Resume file: None

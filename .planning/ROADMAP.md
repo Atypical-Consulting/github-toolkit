@@ -34,8 +34,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 
 Plans:
-- [ ] 01-01-PLAN.md — Extend ScanProgress Rust struct with per-repo report payload and rewrite scan.slice.ts event handler with listener lifecycle fix
-- [ ] 01-02-PLAN.md — Add shimmer CSS, update health ring animation timing, extract RepoRow component with per-repo selectors
+- [x] 01-01-PLAN.md — Extend ScanProgress Rust struct with per-repo report payload and rewrite scan.slice.ts event handler with listener lifecycle fix
+- [x] 01-02-PLAN.md — Add shimmer CSS, update health ring animation timing, extract RepoRow component with per-repo selectors
 - [ ] 01-03-PLAN.md — Integration smoke test and visual verification of all SCAN requirements
 
 ### Phase 2: MCP Foundation
@@ -124,7 +124,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Realtime Scan UI | 1/3 | In Progress|  |
+| 1. Realtime Scan UI | 2/3 | In Progress|  |
 | 2. MCP Foundation | 0/3 | Not started | - |
 | 3. MCP Query Tools | 0/2 | Not started | - |
 | 4. MCP Scan Tools + Settings | 0/3 | Not started | - |

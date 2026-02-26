@@ -11,8 +11,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **SCAN-01**: Health ring fills to its score as each repo's diagnostics complete during a scan
 - [x] **SCAN-02**: Diagnostic breakdown (rules passed/failed) appears immediately per repo during scan
-- [ ] **SCAN-03**: Repo cards show a skeleton/shimmer state while their diagnostics are in-flight
-- [ ] **SCAN-04**: Health ring animates smoothly (300ms ease-in-out) when score updates
+- [x] **SCAN-03**: Repo cards show a skeleton/shimmer state while their diagnostics are in-flight
+- [x] **SCAN-04**: Health ring animates smoothly (300ms ease-in-out) when score updates
 - [x] **SCAN-05**: Tauri event listener cleanup (unlisten) is properly handled to prevent memory leaks
 
 ### MCP Server Foundation
@@ -94,8 +94,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | SCAN-01 | Phase 1 | Complete |
 | SCAN-02 | Phase 1 | Complete |
-| SCAN-03 | Phase 1 | Pending |
-| SCAN-04 | Phase 1 | Pending |
+| SCAN-03 | Phase 1 | Complete |
+| SCAN-04 | Phase 1 | Complete |
 | SCAN-05 | Phase 1 | Complete |
 | MCP-01 | Phase 2 | Pending |
 | MCP-02 | Phase 2 | Pending |
