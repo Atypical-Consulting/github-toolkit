@@ -51,9 +51,9 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 02-01: Create shared library crate (github_automate_lib) and new MCP binary target in Cargo.toml
-- [ ] 02-02: Implement ServerHandler stub with tools/list, configure tracing to stderr, define McpError sanitized type
-- [ ] 02-03: Enable WAL mode in storage/mod.rs and verify concurrent access from both processes
+- [ ] 02-01-PLAN.md — Add MCP binary target, rmcp dependencies, mcp module skeleton with error sanitization, and stderr-only tracing entry point
+- [ ] 02-02-PLAN.md — Implement ServerHandler with tool_handler/tool_router macros, 6 stub tools with JSON Schema, and stdio serve loop
+- [ ] 02-03-PLAN.md — Enable WAL mode in init_db with hard error propagation and add standalone DB path resolver for MCP binary
 
 ### Phase 3: MCP Query Tools
 **Goal**: AI tools can read all health and backlog data from the local SQLite database via three read-only MCP tools
