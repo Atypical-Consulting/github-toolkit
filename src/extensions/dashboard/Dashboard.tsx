@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useGitHubStore } from "@/core/stores/domain/github";
 import { useDiagnosticsStore } from "@/core/stores/domain/diagnostics";
 import { useBacklogStore } from "@/core/stores/domain/backlog";
@@ -581,6 +581,90 @@ function HealthRing({ score, size = 40 }: { score: number; size?: number }) {
   );
 }
 
+// ─── Repo Row ──────────────────────────────────────────────────────
+
+function RepoRow({ repo }: { repo: any }) {
+  const { navigateTo } = useNavigationStore();
+  const report = useDiagnosticsStore(
+    useCallback((s) => s.reports[repo.fullName], [repo.fullName])
+  );
+  const isScanning = useDiagnosticsStore(
+    useCallback((s) => s.scanningRepos.has(repo.fullName), [repo.fullName])
+  );
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border-subtle transition-all hover:border-border hover:bg-surface-raised/50">
+      <button
+        onClick={() => navigateTo({ name: "repo-details", repoFullName: repo.fullName })}
+        className="flex w-full items-center gap-3.5 px-4 py-3 text-left"
+      >
+        {/* Navigate chevron */}
+        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-text-dim">
+          <ChevronRight className="h-3.5 w-3.5" />
+        </div>
+
+        {/* Health indicator with skeleton state */}
+        {isScanning ? (
+          <div className="h-9 w-9 shrink-0 rounded-full animate-shimmer" />
+        ) : report ? (
+          <HealthRing score={report.healthScore} size={36} />
+        ) : (
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center">
+            <div className="h-2 w-2 rounded-full bg-surface-hover" />
+          </div>
+        )}
+
+        {/* Repo info */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-display text-[13px] font-semibold text-text">
+              {repo.name}
+            </span>
+            {repo.isArchived && (
+              <span className="flex items-center gap-1 rounded-md bg-surface-hover/60 px-1.5 py-0.5 text-[10px] text-text-dim">
+                <Archive className="h-2.5 w-2.5" />
+                archived
+              </span>
+            )}
+            {repo.isPrivate && (
+              <Lock className="h-3 w-3 shrink-0 text-text-dim/60" />
+            )}
+          </div>
+          {repo.description && (
+            <p className="mt-0.5 truncate font-display text-[12px] text-text-dim">
+              {repo.description}
+            </p>
+          )}
+        </div>
+
+        {/* Topics */}
+        <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
+          {repo.topics.slice(0, 3).map((topic: string) => (
+            <span
+              key={topic}
+              className="rounded-md bg-mauve/8 px-2 py-0.5 font-display text-[10px] font-medium text-mauve"
+            >
+              {topic}
+            </span>
+          ))}
+          {repo.topics.length > 3 && (
+            <span className="font-mono text-[10px] text-text-dim">
+              +{repo.topics.length - 3}
+            </span>
+          )}
+        </div>
+
+        {/* Open issues */}
+        {repo.openIssuesCount > 0 && (
+          <span className="shrink-0 font-mono text-[11px] text-text-dim">
+            {repo.openIssuesCount} <CircleDot className="inline h-3 w-3" />
+          </span>
+        )}
+      </button>
+    </div>
+  );
+}
+
 // ─── Repositories Tab ──────────────────────────────────────────────
 
 function RepositoriesTab({
@@ -592,7 +676,6 @@ function RepositoriesTab({
   reports: Record<string, any>;
   reposLoading: boolean;
 }) {
-  const { navigateTo } = useNavigationStore();
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "score" | "issues">("name");
 
@@ -700,84 +783,9 @@ function RepositoriesTab({
 
             {/* Repo Cards */}
             <div className="space-y-1.5">
-              {ownerRepos.map((repo) => {
-                const report = reports[repo.fullName];
-
-                return (
-                  <div
-                    key={repo.fullName}
-                    className="overflow-hidden rounded-xl border border-border-subtle transition-all hover:border-border hover:bg-surface-raised/50"
-                  >
-                    <button
-                      onClick={() =>
-                        navigateTo({ name: "repo-details", repoFullName: repo.fullName })
-                      }
-                      className="flex w-full items-center gap-3.5 px-4 py-3 text-left"
-                    >
-                      {/* Navigate chevron */}
-                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-text-dim">
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      </div>
-
-                      {/* Health indicator */}
-                      {report ? (
-                        <HealthRing score={report.healthScore} size={36} />
-                      ) : (
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center">
-                          <div className="h-2 w-2 rounded-full bg-surface-hover" />
-                        </div>
-                      )}
-
-                      {/* Repo info */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-display text-[13px] font-semibold text-text">
-                            {repo.name}
-                          </span>
-                          {repo.isArchived && (
-                            <span className="flex items-center gap-1 rounded-md bg-surface-hover/60 px-1.5 py-0.5 text-[10px] text-text-dim">
-                              <Archive className="h-2.5 w-2.5" />
-                              archived
-                            </span>
-                          )}
-                          {repo.isPrivate && (
-                            <Lock className="h-3 w-3 shrink-0 text-text-dim/60" />
-                          )}
-                        </div>
-                        {repo.description && (
-                          <p className="mt-0.5 truncate font-display text-[12px] text-text-dim">
-                            {repo.description}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Topics */}
-                      <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
-                        {repo.topics.slice(0, 3).map((topic: string) => (
-                          <span
-                            key={topic}
-                            className="rounded-md bg-mauve/8 px-2 py-0.5 font-display text-[10px] font-medium text-mauve"
-                          >
-                            {topic}
-                          </span>
-                        ))}
-                        {repo.topics.length > 3 && (
-                          <span className="font-mono text-[10px] text-text-dim">
-                            +{repo.topics.length - 3}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Open issues */}
-                      {repo.openIssuesCount > 0 && (
-                        <span className="shrink-0 font-mono text-[11px] text-text-dim">
-                          {repo.openIssuesCount} <CircleDot className="inline h-3 w-3" />
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                );
-              })}
+              {ownerRepos.map((repo) => (
+                <RepoRow key={repo.fullName} repo={repo} />
+              ))}
             </div>
           </div>
         ))}
