@@ -92,40 +92,40 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCAN-01 | — | Pending |
-| SCAN-02 | — | Pending |
-| SCAN-03 | — | Pending |
-| SCAN-04 | — | Pending |
-| SCAN-05 | — | Pending |
-| MCP-01 | — | Pending |
-| MCP-02 | — | Pending |
-| MCP-03 | — | Pending |
-| MCP-04 | — | Pending |
-| MCP-05 | — | Pending |
-| MCP-06 | — | Pending |
-| MCP-07 | — | Pending |
-| QUERY-01 | — | Pending |
-| QUERY-02 | — | Pending |
-| QUERY-03 | — | Pending |
-| MSCAN-01 | — | Pending |
-| MSCAN-02 | — | Pending |
-| MSCAN-03 | — | Pending |
-| WRITE-01 | — | Pending |
-| WRITE-02 | — | Pending |
-| FIX-01 | — | Pending |
-| FIX-02 | — | Pending |
-| FIX-03 | — | Pending |
-| FIX-04 | — | Pending |
-| FIX-05 | — | Pending |
-| FIX-06 | — | Pending |
-| SET-01 | — | Pending |
-| SET-02 | — | Pending |
+| SCAN-01 | Phase 1 | Pending |
+| SCAN-02 | Phase 1 | Pending |
+| SCAN-03 | Phase 1 | Pending |
+| SCAN-04 | Phase 1 | Pending |
+| SCAN-05 | Phase 1 | Pending |
+| MCP-01 | Phase 2 | Pending |
+| MCP-02 | Phase 2 | Pending |
+| MCP-03 | Phase 2 | Pending |
+| MCP-04 | Phase 2 | Pending |
+| MCP-05 | Phase 2 | Pending |
+| MCP-06 | Phase 2 | Pending |
+| MCP-07 | Phase 2 | Pending |
+| QUERY-01 | Phase 3 | Pending |
+| QUERY-02 | Phase 3 | Pending |
+| QUERY-03 | Phase 3 | Pending |
+| MSCAN-01 | Phase 4 | Pending |
+| MSCAN-02 | Phase 4 | Pending |
+| MSCAN-03 | Phase 4 | Pending |
+| SET-01 | Phase 4 | Pending |
+| SET-02 | Phase 4 | Pending |
+| WRITE-01 | Phase 5 | Pending |
+| WRITE-02 | Phase 5 | Pending |
+| FIX-01 | Phase 6 | Pending |
+| FIX-02 | Phase 6 | Pending |
+| FIX-03 | Phase 6 | Pending |
+| FIX-04 | Phase 6 | Pending |
+| FIX-05 | Phase 6 | Pending |
+| FIX-06 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 28 total
-- Mapped to phases: 0
-- Unmapped: 28
+- Mapped to phases: 28
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-26 after initial definition*
+*Last updated: 2026-02-26 after roadmap creation*
