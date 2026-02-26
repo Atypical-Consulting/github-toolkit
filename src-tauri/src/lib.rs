@@ -2,6 +2,7 @@ mod github;
 mod diagnostics;
 mod storage;
 mod backlog;
+pub mod mcp;
 
 use specta_typescript::Typescript;
 use tauri::Manager;
