@@ -8,7 +8,7 @@ progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 16
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Current Position
 
 Phase: 2 of 6 (MCP Foundation)
-Plan: 1 of 3 in current phase
-Status: In Progress
-Last activity: 2026-02-26 — Completed Plan 01: MCP binary target with rmcp deps, error sanitization, stderr tracing
+Plan: 3 of 3 in current phase
+Status: Phase Complete
+Last activity: 2026-02-26 — Completed Plan 02: ServerHandler with 6 stub tools, stdio serve loop, JSON Schema inputSchema
 
-Progress: [████░░░░░░] 25%
+Progress: [████░░░░░░] 35%
 
 ## Performance Metrics
 
@@ -67,6 +67,9 @@ Recent decisions affecting current work:
 - [01-03]: Full-stack smoke test order established: cargo build → tsc --noEmit → npm run check → human visual verification
 - [02-01]: CallToolResult::error(vec![Content::text(msg)]) is the correct rmcp 0.16 API for error results — not Default::default()
 - [02-01]: tracing crate added as direct dependency for binary-level logging macros
+- [02-02]: Combined tools + server in single server.rs — rmcp tool_router macro generates associated items requiring same compilation unit
+- [02-02]: Parameters<T> wrapper (not #[tool(aggr)]) is the correct rmcp 0.16 API for tool param extraction
+- [02-02]: Tool functions return String directly — IntoContents blanket impl auto-wraps as CallToolResult::success
 
 ### Pending Todos
 
@@ -81,5 +84,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-26
-Stopped at: Completed 02-01-PLAN.md (MCP binary target with rmcp deps, error sanitization, stderr tracing)
+Stopped at: Completed 02-02-PLAN.md (ServerHandler with 6 stub tools, stdio serve loop)
 Resume file: None
