@@ -18,7 +18,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### MCP Server Foundation
 
 - [x] **MCP-01**: MCP server runs as a separate Rust binary using stdio transport
-- [ ] **MCP-02**: SQLite database uses WAL mode for concurrent access by Tauri app and MCP binary
+- [x] **MCP-02**: SQLite database uses WAL mode for concurrent access by Tauri app and MCP binary
 - [ ] **MCP-03**: MCP server declares `tools` capability and returns all tools via `tools/list`
 - [ ] **MCP-04**: Every tool has a well-formed JSON Schema `inputSchema` and human-readable description
 - [ ] **MCP-05**: Tool execution errors return structured responses with `isError: true`
@@ -98,7 +98,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCAN-04 | Phase 1 | Complete |
 | SCAN-05 | Phase 1 | Complete |
 | MCP-01 | Phase 2 | Complete |
-| MCP-02 | Phase 2 | Pending |
+| MCP-02 | Phase 2 | Complete |
 | MCP-03 | Phase 2 | Pending |
 | MCP-04 | Phase 2 | Pending |
 | MCP-05 | Phase 2 | Pending |
