@@ -9,8 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="Octokit" Version="14.0.0" />
-    <PackageReference Include="Spectre.Console" Version="0.53.0" />
-    <PackageReference Include="Spectre.Console.Cli" Version="0.53.0" />
+    <PackageReference Include="Spectre.Console" Version="0.54.0" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.53.1" />
   </ItemGroup>
 
 </Project>
