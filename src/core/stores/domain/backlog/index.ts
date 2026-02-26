@@ -65,13 +65,25 @@ export const useBacklogStore = create<BacklogStore>()(
           const { commands } = await import("@/bindings");
           const result = await commands.listBacklog(get().filters);
           if (result.status === "ok") {
-            set({ items: result.data as BacklogItem[], isLoading: false }, undefined, "backlog/load/ok");
+            set(
+              { items: result.data as BacklogItem[], isLoading: false },
+              undefined,
+              "backlog/load/ok",
+            );
           } else {
-            set({ error: "Failed to load backlog", isLoading: false }, undefined, "backlog/load/error");
+            set(
+              { error: "Failed to load backlog", isLoading: false },
+              undefined,
+              "backlog/load/error",
+            );
             log.error("backlog", "Failed to load backlog items");
           }
         } catch (e) {
-          set({ error: String(e), isLoading: false }, undefined, "backlog/load/error");
+          set(
+            { error: String(e), isLoading: false },
+            undefined,
+            "backlog/load/error",
+          );
           log.error("backlog", `Load error: ${String(e)}`);
         }
       },
@@ -82,20 +94,31 @@ export const useBacklogStore = create<BacklogStore>()(
           return;
         }
         set({ isGenerating: true, error: null }, undefined, "backlog/generate");
-        log.info("backlog", `Generating backlog from ${reports.length} reports...`);
+        log.info(
+          "backlog",
+          `Generating backlog from ${reports.length} reports...`,
+        );
         try {
           const { commands } = await import("@/bindings");
           const result = await commands.generateBacklogFromScan(reports);
           if (result.status === "ok") {
             const items = result.data as BacklogItem[];
-            set({ items, isGenerating: false }, undefined, "backlog/generate/ok");
+            set(
+              { items, isGenerating: false },
+              undefined,
+              "backlog/generate/ok",
+            );
             log.success("backlog", `Generated ${items.length} backlog items`);
           } else {
             set({ isGenerating: false }, undefined, "backlog/generate/error");
             log.error("backlog", "Failed to generate backlog");
           }
         } catch (e) {
-          set({ error: String(e), isGenerating: false }, undefined, "backlog/generate/error");
+          set(
+            { error: String(e), isGenerating: false },
+            undefined,
+            "backlog/generate/error",
+          );
           log.error("backlog", `Generate error: ${String(e)}`);
         }
       },
@@ -117,7 +140,10 @@ export const useBacklogStore = create<BacklogStore>()(
           const res = await commands.generateBacklogFromScan([miniReport]);
           if (res.status === "ok") {
             await get().loadItems();
-            log.success("backlog", `Created backlog item for "${failedResult.ruleName}"`);
+            log.success(
+              "backlog",
+              `Created backlog item for "${failedResult.ruleName}"`,
+            );
           }
         } catch (e) {
           log.error("backlog", `Failed to create item: ${String(e)}`);
@@ -149,7 +175,11 @@ export const useBacklogStore = create<BacklogStore>()(
           set({ isCreatingIssue: false }, undefined, "backlog/createIssue/ok");
           log.success("backlog", "GitHub issue created");
         } catch (e) {
-          set({ error: String(e), isCreatingIssue: false }, undefined, "backlog/createIssue/error");
+          set(
+            { error: String(e), isCreatingIssue: false },
+            undefined,
+            "backlog/createIssue/error",
+          );
           log.error("backlog", `Issue creation error: ${String(e)}`);
         }
       },
@@ -163,7 +193,11 @@ export const useBacklogStore = create<BacklogStore>()(
       },
 
       clearFilters: () => {
-        set({ filters: { ...defaultFilters } }, undefined, "backlog/clearFilters");
+        set(
+          { filters: { ...defaultFilters } },
+          undefined,
+          "backlog/clearFilters",
+        );
       },
     }),
     { name: "backlog", enabled: import.meta.env.DEV },

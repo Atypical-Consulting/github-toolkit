@@ -1,9 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { Check, Copy, ExternalLink, Github } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useGitHubStore } from "@/core/stores/domain/github";
-import { Github, ExternalLink, Copy, Check } from "lucide-react";
 
 export function AuthScreen() {
-  const { userCode, verificationUri, startDeviceFlow, pollAuth, authError, pollInterval } = useGitHubStore();
+  const {
+    userCode,
+    verificationUri,
+    startDeviceFlow,
+    pollAuth,
+    authError,
+    pollInterval,
+  } = useGitHubStore();
   const [copied, setCopied] = useState(false);
   const [polling, setPolling] = useState(false);
 
@@ -61,7 +68,8 @@ export function AuthScreen() {
           <Github className="h-16 w-16 text-accent" />
           <h1 className="text-2xl font-bold text-text">GitHubAutomate</h1>
           <p className="text-center text-text-muted">
-            Sign in with GitHub to scan your repositories and diagnose health issues.
+            Sign in with GitHub to scan your repositories and diagnose health
+            issues.
           </p>
         </div>
 
@@ -75,11 +83,22 @@ export function AuthScreen() {
         ) : (
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-surface-alt p-4 text-center">
-              <p className="mb-2 text-sm text-text-muted">Enter this code on GitHub:</p>
+              <p className="mb-2 text-sm text-text-muted">
+                Enter this code on GitHub:
+              </p>
               <div className="flex items-center justify-center gap-2">
-                <code className="text-3xl font-bold tracking-widest text-accent">{userCode}</code>
-                <button onClick={copyCode} className="rounded p-1 hover:bg-surface-hover">
-                  {copied ? <Check className="h-5 w-5 text-success" /> : <Copy className="h-5 w-5 text-text-dim" />}
+                <code className="text-3xl font-bold tracking-widest text-accent">
+                  {userCode}
+                </code>
+                <button
+                  onClick={copyCode}
+                  className="rounded p-1 hover:bg-surface-hover"
+                >
+                  {copied ? (
+                    <Check className="h-5 w-5 text-success" />
+                  ) : (
+                    <Copy className="h-5 w-5 text-text-dim" />
+                  )}
                 </button>
               </div>
             </div>

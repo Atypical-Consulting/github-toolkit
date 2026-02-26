@@ -1,7 +1,7 @@
 import type { StateCreator } from "zustand";
+import { log } from "@/core/stores/log";
 import type { DiagnosticsStore } from "./index";
 import type { DiagnosticResult } from "./results.slice";
-import { log } from "@/core/stores/log";
 
 export interface ScanMeta {
   commitSha: string;
@@ -19,8 +19,18 @@ export interface RepoDetailSlice {
   ruleOverridesByRepo: Record<string, Record<string, DiagnosticResult>>;
   /** Per-repo scan metadata (commit sha, cache status) */
   scanMetaByRepo: Record<string, ScanMeta>;
-  rescanRepo: (repoFullName: string, owner: string, repo: string, defaultBranch: string) => Promise<void>;
-  scanRule: (repoFullName: string, owner: string, repo: string, ruleId: string) => Promise<void>;
+  rescanRepo: (
+    repoFullName: string,
+    owner: string,
+    repo: string,
+    defaultBranch: string,
+  ) => Promise<void>;
+  scanRule: (
+    repoFullName: string,
+    owner: string,
+    repo: string,
+    ruleId: string,
+  ) => Promise<void>;
   clearRepoOverrides: (repoFullName: string) => void;
   isRepoRescanning: (repoFullName: string) => boolean;
   getRepoScanError: (repoFullName: string) => string | null;
@@ -61,23 +71,37 @@ export const createRepoDetailSlice: StateCreator<
 
     try {
       const { commands } = await import("@/bindings");
-      const result = await commands.scanRepositoryCached(owner, repo, defaultBranch);
+      const result = await commands.scanRepositoryCached(
+        owner,
+        repo,
+        defaultBranch,
+      );
       if (result.status === "ok") {
         const { report, commitSha, fromCache } = result.data;
         set(
           (state) => ({
-            ruleOverridesByRepo: omitKey(state.ruleOverridesByRepo, repoFullName),
-            scanMetaByRepo: { ...state.scanMetaByRepo, [repoFullName]: { commitSha, fromCache } },
+            ruleOverridesByRepo: omitKey(
+              state.ruleOverridesByRepo,
+              repoFullName,
+            ),
+            scanMetaByRepo: {
+              ...state.scanMetaByRepo,
+              [repoFullName]: { commitSha, fromCache },
+            },
           }),
           undefined,
           "repoDetail/rescan/ok",
         );
         get().updateReport(report);
-        log.success("repoDetail", `${repoFullName} scanned — ${Math.round(report.healthScore)}% health${fromCache ? " (cached)" : ""}`);
+        log.success(
+          "repoDetail",
+          `${repoFullName} scanned — ${Math.round(report.healthScore)}% health${fromCache ? " (cached)" : ""}`,
+        );
       } else {
-        const msg = typeof result.error === "object" && result.error !== null
-          ? JSON.stringify(result.error)
-          : String(result.error);
+        const msg =
+          typeof result.error === "object" && result.error !== null
+            ? JSON.stringify(result.error)
+            : String(result.error);
         set(
           (state) => ({
             repoScanErrors: { ...state.repoScanErrors, [repoFullName]: msg },
@@ -90,7 +114,10 @@ export const createRepoDetailSlice: StateCreator<
     } catch (e) {
       set(
         (state) => ({
-          repoScanErrors: { ...state.repoScanErrors, [repoFullName]: String(e) },
+          repoScanErrors: {
+            ...state.repoScanErrors,
+            [repoFullName]: String(e),
+          },
         }),
         undefined,
         "repoDetail/rescan/error",
@@ -99,7 +126,9 @@ export const createRepoDetailSlice: StateCreator<
     } finally {
       set(
         (state) => ({
-          rescanningRepos: state.rescanningRepos.filter((r) => r !== repoFullName),
+          rescanningRepos: state.rescanningRepos.filter(
+            (r) => r !== repoFullName,
+          ),
         }),
         undefined,
         "repoDetail/rescan/done",
@@ -110,7 +139,10 @@ export const createRepoDetailSlice: StateCreator<
   scanRule: async (repoFullName, owner, repo, ruleId) => {
     set(
       (state) => ({
-        scanningRuleByRepo: { ...state.scanningRuleByRepo, [repoFullName]: ruleId },
+        scanningRuleByRepo: {
+          ...state.scanningRuleByRepo,
+          [repoFullName]: ruleId,
+        },
       }),
       undefined,
       "repoDetail/scanRule/start",
@@ -134,9 +166,15 @@ export const createRepoDetailSlice: StateCreator<
           "repoDetail/scanRule/ok",
         );
         const status = result.data.passed ? "passed" : "failed";
-        log.info("repoDetail", `Rule "${ruleId}" ${status} for ${repoFullName}`);
+        log.info(
+          "repoDetail",
+          `Rule "${ruleId}" ${status} for ${repoFullName}`,
+        );
       } else {
-        log.error("repoDetail", `Rule "${ruleId}" scan failed: ${JSON.stringify(result.error)}`);
+        log.error(
+          "repoDetail",
+          `Rule "${ruleId}" scan failed: ${JSON.stringify(result.error)}`,
+        );
       }
     } catch (e) {
       log.error("repoDetail", `Rule "${ruleId}" error: ${String(e)}`);
@@ -162,10 +200,14 @@ export const createRepoDetailSlice: StateCreator<
     );
   },
 
-  isRepoRescanning: (repoFullName) => get().rescanningRepos.includes(repoFullName),
-  getRepoScanError: (repoFullName) => get().repoScanErrors[repoFullName] ?? null,
-  getScanningRuleId: (repoFullName) => get().scanningRuleByRepo[repoFullName] ?? null,
-  getRuleOverrides: (repoFullName) => get().ruleOverridesByRepo[repoFullName] ?? {},
+  isRepoRescanning: (repoFullName) =>
+    get().rescanningRepos.includes(repoFullName),
+  getRepoScanError: (repoFullName) =>
+    get().repoScanErrors[repoFullName] ?? null,
+  getScanningRuleId: (repoFullName) =>
+    get().scanningRuleByRepo[repoFullName] ?? null,
+  getRuleOverrides: (repoFullName) =>
+    get().ruleOverridesByRepo[repoFullName] ?? {},
   getRepoScanMeta: (repoFullName) => get().scanMetaByRepo[repoFullName] ?? null,
 });
 

@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand";
-import type { GitHubStore } from "./index";
 import { log } from "@/core/stores/log";
+import type { GitHubStore } from "./index";
 
 export interface RepoSummary {
   fullName: string;
@@ -43,7 +43,11 @@ export const createReposSlice: StateCreator<
       const { commands } = await import("@/bindings");
       const result = await commands.loadCachedRepos();
       if (result.status === "ok" && result.data.length > 0) {
-        set({ repos: result.data as RepoSummary[], reposCacheLoaded: true }, undefined, "repos/loadCache");
+        set(
+          { repos: result.data as RepoSummary[], reposCacheLoaded: true },
+          undefined,
+          "repos/loadCache",
+        );
         log.info("repos", `Loaded ${result.data.length} repos from cache`);
       } else {
         set({ reposCacheLoaded: true }, undefined, "repos/loadCache/empty");
@@ -107,13 +111,21 @@ export const createReposSlice: StateCreator<
         return true;
       });
 
-      set({ repos: unique, reposLoading: false, reposCacheLoaded: true }, undefined, "repos/fetchAll/ok");
+      set(
+        { repos: unique, reposLoading: false, reposCacheLoaded: true },
+        undefined,
+        "repos/fetchAll/ok",
+      );
       log.success("repos", `Fetched ${unique.length} repositories`);
 
       // Persist to DB in background (best-effort)
       commands.persistRepos(unique).catch(() => {});
     } catch (e) {
-      set({ reposError: String(e), reposLoading: false }, undefined, "repos/fetchAll/error");
+      set(
+        { reposError: String(e), reposLoading: false },
+        undefined,
+        "repos/fetchAll/error",
+      );
       log.error("repos", `Fetch failed: ${String(e)}`);
     }
   },

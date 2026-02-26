@@ -1,44 +1,59 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
-import { useGitHubStore } from "@/core/stores/domain/github";
-import { useDiagnosticsStore } from "@/core/stores/domain/diagnostics";
-import { useBacklogStore } from "@/core/stores/domain/backlog";
-import { useNavigationStore } from "@/core/stores/navigation";
-import { cn } from "@/core/lib/cn";
 import {
-  GitBranch,
-  CheckCircle2,
+  Activity,
   AlertTriangle,
-  XOctagon,
-  Play,
+  Archive,
+  ArrowUpRight,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
-  ExternalLink,
-  Lock,
-  Archive,
-  Shield,
   CircleDot,
-  Loader2,
-  Search,
+  Command,
+  ExternalLink,
+  Eye,
+  FileText,
+  GitBranch,
   LayoutGrid,
   ListChecks,
-  Activity,
-  Terminal,
-  FileText,
+  Loader2,
+  Lock,
+  Play,
+  Search,
+  type Shield,
   Sparkles,
-  Eye,
-  ArrowUpRight,
-  Command,
   Square,
+  Terminal,
+  XOctagon,
 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { cn } from "@/core/lib/cn";
+import { useBacklogStore } from "@/core/stores/domain/backlog";
+import { useDiagnosticsStore } from "@/core/stores/domain/diagnostics";
+import { useGitHubStore } from "@/core/stores/domain/github";
+import { useNavigationStore } from "@/core/stores/navigation";
 
 type Tab = "overview" | "repositories" | "backlog";
 
 // ─── Main Dashboard ────────────────────────────────────────────────
 
 export function Dashboard() {
-  const { repos, reposLoading, reposCacheLoaded, loadCachedRepos, fetchAllRepos } = useGitHubStore();
-  const { isScanRunning, scanProgress, startScan, cancelScan, reports, diagnosticsCacheLoaded, loadCachedDiagnostics, loadRules, getHealthDistribution } =
-    useDiagnosticsStore();
+  const {
+    repos,
+    reposLoading,
+    reposCacheLoaded,
+    loadCachedRepos,
+    fetchAllRepos,
+  } = useGitHubStore();
+  const {
+    isScanRunning,
+    scanProgress,
+    startScan,
+    cancelScan,
+    reports,
+    diagnosticsCacheLoaded,
+    loadCachedDiagnostics,
+    loadRules,
+    getHealthDistribution,
+  } = useDiagnosticsStore();
   const { items: backlogItems, generateFromScan } = useBacklogStore();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
 
@@ -78,10 +93,25 @@ export function Dashboard() {
     }
   };
 
-  const tabs: { id: Tab; label: string; icon: typeof LayoutGrid; count?: number }[] = [
+  const tabs: {
+    id: Tab;
+    label: string;
+    icon: typeof LayoutGrid;
+    count?: number;
+  }[] = [
     { id: "overview", label: "Overview", icon: Activity },
-    { id: "repositories", label: "Repositories", icon: LayoutGrid, count: repos.length },
-    { id: "backlog", label: "Backlog", icon: ListChecks, count: backlogItems.length },
+    {
+      id: "repositories",
+      label: "Repositories",
+      icon: LayoutGrid,
+      count: repos.length,
+    },
+    {
+      id: "backlog",
+      label: "Backlog",
+      icon: ListChecks,
+      count: backlogItems.length,
+    },
   ];
 
   return (
@@ -145,7 +175,8 @@ export function Dashboard() {
               disabled={repos.length === 0 || reposLoading}
               className={cn(
                 "flex items-center gap-1.5 rounded-lg bg-accent/12 px-3.5 py-1.5 font-display text-[12px] font-semibold text-accent transition-all hover:bg-accent/20",
-                (repos.length === 0 || reposLoading) && "cursor-not-allowed opacity-40",
+                (repos.length === 0 || reposLoading) &&
+                  "cursor-not-allowed opacity-40",
               )}
             >
               <Play className="h-3.5 w-3.5" fill="currentColor" />
@@ -169,7 +200,11 @@ export function Dashboard() {
           />
         )}
         {activeTab === "repositories" && (
-          <RepositoriesTab repos={repos} reports={reports} reposLoading={reposLoading} />
+          <RepositoriesTab
+            repos={repos}
+            reports={reports}
+            reposLoading={reposLoading}
+          />
         )}
         {activeTab === "backlog" && <BacklogTab items={backlogItems} />}
       </div>
@@ -193,7 +228,11 @@ function OverviewTab({
   distribution: { healthy: number; warning: number; critical: number };
   scannedCount: number;
   isScanRunning: boolean;
-  scanProgress: { total: number; completed: number; currentRepo: string } | null;
+  scanProgress: {
+    total: number;
+    completed: number;
+    currentRepo: string;
+  } | null;
   reports: Record<string, any>;
 }) {
   return (
@@ -329,7 +368,11 @@ function ScanTerminal({
   scannedCount,
 }: {
   isScanRunning: boolean;
-  scanProgress: { total: number; completed: number; currentRepo: string } | null;
+  scanProgress: {
+    total: number;
+    completed: number;
+    currentRepo: string;
+  } | null;
   reports: Record<string, any>;
   scannedCount: number;
 }) {
@@ -357,7 +400,9 @@ function ScanTerminal({
   }, [isScanRunning]);
 
   const pct = scanProgress
-    ? Math.round((scanProgress.completed / Math.max(scanProgress.total, 1)) * 100)
+    ? Math.round(
+        (scanProgress.completed / Math.max(scanProgress.total, 1)) * 100,
+      )
     : 0;
 
   if (!isScanRunning && logEntries.length === 0) {
@@ -388,7 +433,9 @@ function ScanTerminal({
             <div className="h-2.5 w-2.5 rounded-full bg-warning/60" />
             <div className="h-2.5 w-2.5 rounded-full bg-success/60" />
           </div>
-          <span className="font-display text-[13px] font-medium text-text">Scan Log</span>
+          <span className="font-display text-[13px] font-medium text-text">
+            Scan Log
+          </span>
           {isScanRunning && scanProgress && (
             <span className="font-mono text-xs text-text-dim">
               {scanProgress.completed}/{scanProgress.total}
@@ -454,7 +501,9 @@ function ScanTerminal({
               </span>
               <span className="text-border">|</span>
               <ScoreIndicator score={entry.score} />
-              <span className="flex-1 truncate text-text-muted">{entry.repo}</span>
+              <span className="flex-1 truncate text-text-muted">
+                {entry.repo}
+              </span>
               <div className="flex items-center gap-3 text-[11px]">
                 {entry.critical > 0 && (
                   <span className="text-error">{entry.critical} crit</span>
@@ -465,16 +514,20 @@ function ScanTerminal({
                 {entry.info > 0 && (
                   <span className="text-text-dim">{entry.info} info</span>
                 )}
-                {entry.critical === 0 && entry.warning === 0 && entry.info === 0 && (
-                  <span className="text-success">clean</span>
-                )}
+                {entry.critical === 0 &&
+                  entry.warning === 0 &&
+                  entry.info === 0 && (
+                    <span className="text-success">clean</span>
+                  )}
               </div>
             </div>
           ))}
           <div ref={logEndRef} />
 
           {logEntries.length === 0 && isScanRunning && (
-            <div className="px-4 py-3 text-text-dim">Waiting for results...</div>
+            <div className="px-4 py-3 text-text-dim">
+              Waiting for results...
+            </div>
           )}
         </div>
       )}
@@ -485,7 +538,8 @@ function ScanTerminal({
 function ScoreIndicator({ score }: { score: number }) {
   const color =
     score >= 80 ? "text-success" : score >= 40 ? "text-warning" : "text-error";
-  const bg = score >= 80 ? "bg-success" : score >= 40 ? "bg-warning" : "bg-error";
+  const bg =
+    score >= 80 ? "bg-success" : score >= 40 ? "bg-warning" : "bg-error";
   return (
     <div className="flex items-center gap-1.5">
       <div className={cn("h-1.5 w-1.5 rounded-full", bg)} />
@@ -506,9 +560,24 @@ function HealthBar({
   total: number;
 }) {
   const segments = [
-    { count: distribution.healthy, color: "bg-success", label: "Healthy", textColor: "text-success" },
-    { count: distribution.warning, color: "bg-warning", label: "Warning", textColor: "text-warning" },
-    { count: distribution.critical, color: "bg-error", label: "Critical", textColor: "text-error" },
+    {
+      count: distribution.healthy,
+      color: "bg-success",
+      label: "Healthy",
+      textColor: "text-success",
+    },
+    {
+      count: distribution.warning,
+      color: "bg-warning",
+      label: "Warning",
+      textColor: "text-warning",
+    },
+    {
+      count: distribution.critical,
+      color: "bg-error",
+      label: "Critical",
+      textColor: "text-error",
+    },
   ].filter((s) => s.count > 0);
 
   return (
@@ -538,7 +607,12 @@ function HealthBar({
             <span className="font-display text-[12px] text-text-dim">
               {seg.label}
             </span>
-            <span className={cn("font-mono text-[12px] font-semibold", seg.textColor)}>
+            <span
+              className={cn(
+                "font-mono text-[12px] font-semibold",
+                seg.textColor,
+              )}
+            >
               {seg.count}
             </span>
           </div>
@@ -555,12 +629,24 @@ function HealthRing({ score, size = 40 }: { score: number; size?: number }) {
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
   const color =
-    score >= 80 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-error)";
+    score >= 80
+      ? "var(--color-success)"
+      : score >= 40
+        ? "var(--color-warning)"
+        : "var(--color-error)";
 
   return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+    <div
+      className="relative inline-flex items-center justify-center"
+      style={{ width: size, height: size }}
+    >
       <svg className="health-ring" width={size} height={size}>
-        <circle className="health-ring-track" cx={size / 2} cy={size / 2} r={radius} />
+        <circle
+          className="health-ring-track"
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+        />
         <circle
           className="health-ring-fill"
           cx={size / 2}
@@ -586,16 +672,18 @@ function HealthRing({ score, size = 40 }: { score: number; size?: number }) {
 function RepoRow({ repo }: { repo: any }) {
   const { navigateTo } = useNavigationStore();
   const report = useDiagnosticsStore(
-    useCallback((s) => s.reports[repo.fullName], [repo.fullName])
+    useCallback((s) => s.reports[repo.fullName], [repo.fullName]),
   );
   const isScanning = useDiagnosticsStore(
-    useCallback((s) => s.scanningRepos.has(repo.fullName), [repo.fullName])
+    useCallback((s) => s.scanningRepos.has(repo.fullName), [repo.fullName]),
   );
 
   return (
     <div className="overflow-hidden rounded-xl border border-border-subtle transition-all hover:border-border hover:bg-surface-raised/50">
       <button
-        onClick={() => navigateTo({ name: "repo-details", repoFullName: repo.fullName })}
+        onClick={() =>
+          navigateTo({ name: "repo-details", repoFullName: repo.fullName })
+        }
         className="flex w-full items-center gap-3.5 px-4 py-3 text-left"
       >
         {/* Navigate chevron */}
@@ -634,6 +722,20 @@ function RepoRow({ repo }: { repo: any }) {
             <p className="mt-0.5 truncate font-display text-[12px] text-text-dim">
               {repo.description}
             </p>
+          )}
+          {report && (report.criticalCount > 0 || report.warningCount > 0) && (
+            <div className="flex items-center gap-2 mt-0.5">
+              {report.criticalCount > 0 && (
+                <span className="font-mono text-[10px] text-error">
+                  {report.criticalCount} critical
+                </span>
+              )}
+              {report.warningCount > 0 && (
+                <span className="font-mono text-[10px] text-warning">
+                  {report.warningCount} warning
+                </span>
+              )}
+            </div>
           )}
         </div>
 
@@ -723,7 +825,9 @@ function RepositoriesTab({
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-6 w-6 animate-spin text-accent" />
-          <span className="font-display text-sm text-text-dim">Loading repositories...</span>
+          <span className="font-display text-sm text-text-dim">
+            Loading repositories...
+          </span>
         </div>
       </div>
     );
@@ -807,7 +911,13 @@ function RepositoriesTab({
   );
 }
 
-function MetaChip({ icon: Icon, label }: { icon: typeof Shield; label: string }) {
+function MetaChip({
+  icon: Icon,
+  label,
+}: {
+  icon: typeof Shield;
+  label: string;
+}) {
   return (
     <div className="flex items-center gap-1.5 text-[11px] text-text-dim">
       <Icon className="h-3 w-3" />
@@ -835,7 +945,9 @@ function BacklogTab({ items }: { items: any[] }) {
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-raised">
           <FileText className="h-5 w-5 text-text-dim" />
         </div>
-        <p className="font-display text-sm text-text-muted">No backlog items yet.</p>
+        <p className="font-display text-sm text-text-muted">
+          No backlog items yet.
+        </p>
         <p className="mt-1.5 font-display text-xs text-text-dim">
           Run a scan and generate backlog to see items here.
         </p>
@@ -848,7 +960,9 @@ function BacklogTab({ items }: { items: any[] }) {
       <div className="mb-4 flex items-center justify-between">
         <span className="font-display text-[13px] font-medium text-text">
           {items.length} items
-          <span className="ml-1.5 text-text-dim">across {grouped.length} repositories</span>
+          <span className="ml-1.5 text-text-dim">
+            across {grouped.length} repositories
+          </span>
         </span>
       </div>
 
@@ -860,7 +974,9 @@ function BacklogTab({ items }: { items: any[] }) {
           >
             <div className="flex items-center gap-2.5 bg-surface-raised px-4 py-2.5">
               <GitBranch className="h-3.5 w-3.5 text-text-dim" />
-              <span className="font-display text-[13px] font-semibold text-text">{repoName}</span>
+              <span className="font-display text-[13px] font-semibold text-text">
+                {repoName}
+              </span>
               <span className="rounded-md bg-surface-hover/60 px-1.5 py-0.5 font-mono text-[10px] font-medium text-text-dim">
                 {repoItems.length}
               </span>

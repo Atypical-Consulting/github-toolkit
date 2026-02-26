@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { createAuthSlice, type AuthSlice } from "./auth.slice";
+import { type AuthSlice, createAuthSlice } from "./auth.slice";
 import { createReposSlice, type ReposSlice } from "./repos.slice";
 
 export type GitHubStore = AuthSlice & ReposSlice;

@@ -1,30 +1,30 @@
-import { useEffect, useState } from "react";
-import { useNavigationStore } from "@/core/stores/navigation";
-import { useDiagnosticsStore } from "@/core/stores/domain/diagnostics";
-import { useGitHubStore } from "@/core/stores/domain/github";
-import { useBacklogStore } from "@/core/stores/domain/backlog";
-import type { DiagnosticResult } from "@/core/stores/domain/diagnostics/results.slice";
-import { cn } from "@/core/lib/cn";
 import {
-  ArrowLeft,
-  ExternalLink,
-  RefreshCw,
-  Shield,
-  CheckCircle2,
-  XOctagon,
-  AlertTriangle,
-  CircleDot,
-  Lock,
-  Archive,
-  GitBranch,
   Activity,
-  Loader2,
+  AlertTriangle,
+  Archive,
+  ArrowLeft,
+  CheckCircle2,
+  CircleDot,
   Clock,
+  ExternalLink,
+  GitBranch,
   GitCommit,
   ListChecks,
+  Loader2,
+  Lock,
   Play,
   Plus,
+  RefreshCw,
+  Shield,
+  XOctagon,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { cn } from "@/core/lib/cn";
+import { useBacklogStore } from "@/core/stores/domain/backlog";
+import { useDiagnosticsStore } from "@/core/stores/domain/diagnostics";
+import type { DiagnosticResult } from "@/core/stores/domain/diagnostics/results.slice";
+import { useGitHubStore } from "@/core/stores/domain/github";
+import { useNavigationStore } from "@/core/stores/navigation";
 
 interface Props {
   repoFullName: string;
@@ -115,11 +115,7 @@ export function RepoDetailsPage({ repoFullName }: Props) {
     (r) => !r.passed && r.severity === "info",
   ).length;
   const qualityGate =
-    healthScore != null
-      ? healthScore >= 80
-        ? "PASSED"
-        : "FAILED"
-      : null;
+    healthScore != null ? (healthScore >= 80 ? "PASSED" : "FAILED") : null;
 
   const severityOrder: Array<"critical" | "warning" | "info"> = [
     "critical",
@@ -131,9 +127,7 @@ export function RepoDetailsPage({ repoFullName }: Props) {
   const groupedRules = severityOrder
     .map((severity) => ({
       severity,
-      rules: rules.filter(
-        (rule) => rule.severity.toLowerCase() === severity,
-      ),
+      rules: rules.filter((rule) => rule.severity.toLowerCase() === severity),
     }))
     .filter((g) => g.rules.length > 0);
 
@@ -283,9 +277,13 @@ export function RepoDetailsPage({ repoFullName }: Props) {
         <div className="mb-6 rounded-xl border border-error/20 bg-error/5 px-5 py-3">
           <div className="flex items-center gap-2">
             <XOctagon className="h-4 w-4 text-error" />
-            <span className="font-display text-[13px] font-medium text-error">Scan failed</span>
+            <span className="font-display text-[13px] font-medium text-error">
+              Scan failed
+            </span>
           </div>
-          <p className="mt-1 font-mono text-[11px] text-error/70">{scanError}</p>
+          <p className="mt-1 font-mono text-[11px] text-error/70">
+            {scanError}
+          </p>
         </div>
       )}
 
@@ -354,8 +352,7 @@ export function RepoDetailsPage({ repoFullName }: Props) {
                     const hasBacklogItem = repoBacklogItems.some(
                       (i) => i.sourceRef === rule.id,
                     );
-                    const isCreatingBacklog =
-                      creatingBacklogRuleId === rule.id;
+                    const isCreatingBacklog = creatingBacklogRuleId === rule.id;
 
                     return (
                       <div
@@ -487,10 +484,7 @@ export function RepoDetailsPage({ repoFullName }: Props) {
 
           <div className="divide-y divide-border-subtle/50">
             {repoBacklogItems.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-3 px-5 py-3"
-              >
+              <div key={item.id} className="flex items-center gap-3 px-5 py-3">
                 <SeverityDot severity={item.severity} />
                 <div className="min-w-0 flex-1">
                   <span className="font-display text-[13px] text-text">

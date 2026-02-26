@@ -29,7 +29,9 @@
 }
 
 @layer base {
-  html, body, #root {
+  html,
+  body,
+  #root {
     height: 100%;
     width: 100%;
     overflow: hidden;
@@ -43,13 +45,25 @@
   /* ── Atmospheric background ─────────────────────────── */
 
   #root::before {
-    content: '';
+    content: "";
     position: fixed;
     inset: 0;
     background:
-      radial-gradient(ellipse 80% 60% at 10% 0%, rgba(137, 180, 250, 0.06) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 50% at 90% 100%, rgba(203, 166, 247, 0.04) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(180, 190, 254, 0.02) 0%, transparent 70%);
+      radial-gradient(
+        ellipse 80% 60% at 10% 0%,
+        rgba(137, 180, 250, 0.06) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 60% 50% at 90% 100%,
+        rgba(203, 166, 247, 0.04) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 50% 40% at 50% 50%,
+        rgba(180, 190, 254, 0.02) 0%,
+        transparent 70%
+      );
     pointer-events: none;
     z-index: 0;
   }
@@ -62,7 +76,7 @@
   /* ── Noise texture overlay ──────────────────────────── */
 
   #root::after {
-    content: '';
+    content: "";
     position: fixed;
     inset: 0;
     opacity: 0.025;
@@ -114,11 +128,21 @@
   animation: fade-in-up 0.4s ease-out both;
 }
 
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+.stagger-5 {
+  animation-delay: 0.25s;
+}
 
 /* ── Glass surface ──────────────────────────────────── */
 
@@ -152,8 +176,12 @@
 /* ── Scan shimmer skeleton ─────────────────────────── */
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .animate-shimmer {

@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { Header } from "@/core/components/Header";
 import { ToastOverlay } from "@/core/components/ToastOverlay";
-import { AuthScreen } from "@/extensions/settings/AuthScreen";
-import { Dashboard } from "@/extensions/dashboard/Dashboard";
-import { RepoDetailsPage } from "@/extensions/repo-details/RepoDetailsPage";
 import { useGitHubStore } from "@/core/stores/domain/github";
 import { useNavigationStore } from "@/core/stores/navigation";
+import { Dashboard } from "@/extensions/dashboard/Dashboard";
+import { RepoDetailsPage } from "@/extensions/repo-details/RepoDetailsPage";
+import { AuthScreen } from "@/extensions/settings/AuthScreen";
 
 export default function App() {
   const { isAuthenticated, checkAuth, isLoading } = useGitHubStore();

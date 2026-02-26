@@ -18,7 +18,12 @@ interface LogStore {
   /** Max entries kept in memory (older ones are pruned) */
   maxEntries: number;
   /** Push a log entry and optionally show it as a toast */
-  log: (level: LogLevel, source: string, message: string, ttl?: number | null) => string;
+  log: (
+    level: LogLevel,
+    source: string,
+    message: string,
+    ttl?: number | null,
+  ) => string;
   /** Convenience shortcuts */
   info: (source: string, message: string) => string;
   success: (source: string, message: string) => string;
@@ -58,8 +63,17 @@ export const useLogStore = create<LogStore>()(
 
         if (import.meta.env.DEV) {
           const tag = `[${source}]`;
-          const fn = level === "error" ? console.error : level === "warning" ? console.warn : console.log;
-          fn(`%c${tag}%c ${message}`, "color: #89b4fa; font-weight: bold", "color: inherit");
+          const fn =
+            level === "error"
+              ? console.error
+              : level === "warning"
+                ? console.warn
+                : console.log;
+          fn(
+            `%c${tag}%c ${message}`,
+            "color: #89b4fa; font-weight: bold",
+            "color: inherit",
+          );
         }
 
         set(
@@ -102,8 +116,12 @@ export const useLogStore = create<LogStore>()(
 
 /** Shorthand for use inside store actions (outside React) */
 export const log = {
-  info: (source: string, message: string) => useLogStore.getState().info(source, message),
-  success: (source: string, message: string) => useLogStore.getState().success(source, message),
-  warn: (source: string, message: string) => useLogStore.getState().warn(source, message),
-  error: (source: string, message: string) => useLogStore.getState().error(source, message),
+  info: (source: string, message: string) =>
+    useLogStore.getState().info(source, message),
+  success: (source: string, message: string) =>
+    useLogStore.getState().success(source, message),
+  warn: (source: string, message: string) =>
+    useLogStore.getState().warn(source, message),
+  error: (source: string, message: string) =>
+    useLogStore.getState().error(source, message),
 };

@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand";
-import type { DiagnosticsStore } from "./index";
 import { log } from "@/core/stores/log";
+import type { DiagnosticsStore } from "./index";
 
 export interface RepoHealthReport {
   repoFullName: string;
@@ -30,7 +30,11 @@ export interface ResultsSlice {
   loadCachedDiagnostics: () => Promise<void>;
   loadReportForRepo: (repoFullName: string) => Promise<void>;
   getReportForRepo: (fullName: string) => RepoHealthReport | undefined;
-  getHealthDistribution: () => { healthy: number; warning: number; critical: number };
+  getHealthDistribution: () => {
+    healthy: number;
+    warning: number;
+    critical: number;
+  };
 }
 
 export const createResultsSlice: StateCreator<
@@ -52,7 +56,9 @@ export const createResultsSlice: StateCreator<
 
   updateReport: (report) => {
     set(
-      (state) => ({ reports: { ...state.reports, [report.repoFullName]: report } }),
+      (state) => ({
+        reports: { ...state.reports, [report.repoFullName]: report },
+      }),
       undefined,
       "results/updateOne",
     );
@@ -67,13 +73,25 @@ export const createResultsSlice: StateCreator<
         for (const report of result.data) {
           record[report.repoFullName] = report;
         }
-        set({ reports: record, diagnosticsCacheLoaded: true }, undefined, "results/loadCache");
+        set(
+          { reports: record, diagnosticsCacheLoaded: true },
+          undefined,
+          "results/loadCache",
+        );
         log.info("diagnostics", `Loaded ${result.data.length} cached reports`);
       } else {
-        set({ diagnosticsCacheLoaded: true }, undefined, "results/loadCache/empty");
+        set(
+          { diagnosticsCacheLoaded: true },
+          undefined,
+          "results/loadCache/empty",
+        );
       }
     } catch (e) {
-      set({ diagnosticsCacheLoaded: true }, undefined, "results/loadCache/error");
+      set(
+        { diagnosticsCacheLoaded: true },
+        undefined,
+        "results/loadCache/error",
+      );
       log.warn("diagnostics", `Cache load failed: ${String(e)}`);
     }
   },
@@ -86,13 +104,18 @@ export const createResultsSlice: StateCreator<
       if (result.status === "ok" && result.data) {
         const report = result.data;
         set(
-          (state) => ({ reports: { ...state.reports, [repoFullName]: report } }),
+          (state) => ({
+            reports: { ...state.reports, [repoFullName]: report },
+          }),
           undefined,
           "results/loadForRepo",
         );
       }
     } catch (e) {
-      log.warn("diagnostics", `Failed to load report for ${repoFullName}: ${String(e)}`);
+      log.warn(
+        "diagnostics",
+        `Failed to load report for ${repoFullName}: ${String(e)}`,
+      );
     }
   },
 
@@ -104,7 +127,8 @@ export const createResultsSlice: StateCreator<
     const reports = Object.values(get().reports);
     return {
       healthy: reports.filter((r) => r.healthScore >= 80).length,
-      warning: reports.filter((r) => r.healthScore >= 40 && r.healthScore < 80).length,
+      warning: reports.filter((r) => r.healthScore >= 40 && r.healthScore < 80)
+        .length,
       critical: reports.filter((r) => r.healthScore < 40).length,
     };
   },

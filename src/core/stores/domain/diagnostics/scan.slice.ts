@@ -1,8 +1,8 @@
+import { listen } from "@tauri-apps/api/event";
 import type { StateCreator } from "zustand";
+import { log } from "@/core/stores/log";
 import type { DiagnosticsStore } from "./index";
 import type { RepoHealthReport } from "./results.slice";
-import { listen } from "@tauri-apps/api/event";
-import { log } from "@/core/stores/log";
 
 interface ScanProgress {
   total: number;
@@ -51,7 +51,13 @@ export const createScanSlice: StateCreator<
       {
         isScanRunning: true,
         scanError: null,
-        scanProgress: { total: repos.length, completed: 0, currentRepo: "", fromCache: false, report: null },
+        scanProgress: {
+          total: repos.length,
+          completed: 0,
+          currentRepo: "",
+          fromCache: false,
+          report: null,
+        },
         scanningRepos: new Set<string>(),
       },
       undefined,
@@ -96,7 +102,10 @@ export const createScanSlice: StateCreator<
         // Safety-net reconciliation: ensure final state matches even if an event was missed
         const { setReports } = get();
         setReports(result.data.map((c) => c.report));
-        log.success("scan", `Scan complete — ${result.data.length} repos analyzed`);
+        log.success(
+          "scan",
+          `Scan complete — ${result.data.length} repos analyzed`,
+        );
       } else {
         // Don't show error for cancellation
         const err = result.error as any;
@@ -115,7 +124,11 @@ export const createScanSlice: StateCreator<
       currentUnlisten?.();
       currentUnlisten = null;
       // Clear progress and mark done
-      set({ isScanRunning: false, scanProgress: null, scanningRepos: new Set() }, undefined, "scan/done");
+      set(
+        { isScanRunning: false, scanProgress: null, scanningRepos: new Set() },
+        undefined,
+        "scan/done",
+      );
     }
   },
 

@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand";
-import type { GitHubStore } from "./index";
 import { log } from "@/core/stores/log";
+import type { GitHubStore } from "./index";
 
 export interface AuthSlice {
   isAuthenticated: boolean;
@@ -40,20 +40,32 @@ export const createAuthSlice: StateCreator<
       const { commands } = await import("@/bindings");
       const result = await commands.githubGetAuthStatus();
       if (result.status === "ok") {
-        set({
-          isAuthenticated: result.data.authenticated,
-          username: result.data.username ?? null,
-          avatarUrl: result.data.avatarUrl ?? null,
-          isLoading: false,
-        }, undefined, "auth/checkAuth/ok");
+        set(
+          {
+            isAuthenticated: result.data.authenticated,
+            username: result.data.username ?? null,
+            avatarUrl: result.data.avatarUrl ?? null,
+            isLoading: false,
+          },
+          undefined,
+          "auth/checkAuth/ok",
+        );
         if (result.data.authenticated) {
           log.success("auth", `Signed in as ${result.data.username}`);
         }
       } else {
-        set({ isAuthenticated: false, isLoading: false }, undefined, "auth/checkAuth/err");
+        set(
+          { isAuthenticated: false, isLoading: false },
+          undefined,
+          "auth/checkAuth/err",
+        );
       }
     } catch (e) {
-      set({ isAuthenticated: false, isLoading: false }, undefined, "auth/checkAuth/error");
+      set(
+        { isAuthenticated: false, isLoading: false },
+        undefined,
+        "auth/checkAuth/error",
+      );
       log.error("auth", `Auth check failed: ${String(e)}`);
     }
   },
@@ -65,15 +77,23 @@ export const createAuthSlice: StateCreator<
       const { commands } = await import("@/bindings");
       const result = await commands.githubStartDeviceFlow(["repo", "read:org"]);
       if (result.status === "ok") {
-        set({
-          deviceCode: result.data.deviceCode,
-          userCode: result.data.userCode,
-          verificationUri: result.data.verificationUri,
-          pollInterval: result.data.interval,
-        }, undefined, "auth/startFlow/ok");
+        set(
+          {
+            deviceCode: result.data.deviceCode,
+            userCode: result.data.userCode,
+            verificationUri: result.data.verificationUri,
+            pollInterval: result.data.interval,
+          },
+          undefined,
+          "auth/startFlow/ok",
+        );
         log.info("auth", `Enter code: ${result.data.userCode}`);
       } else {
-        set({ authError: "Failed to start device flow" }, undefined, "auth/startFlow/err");
+        set(
+          { authError: "Failed to start device flow" },
+          undefined,
+          "auth/startFlow/err",
+        );
         log.error("auth", "Failed to start device flow");
       }
     } catch (e) {
@@ -87,18 +107,25 @@ export const createAuthSlice: StateCreator<
     if (!deviceCode) return false;
     try {
       const { commands } = await import("@/bindings");
-      const result = await commands.githubPollAuth(deviceCode, get().pollInterval);
+      const result = await commands.githubPollAuth(
+        deviceCode,
+        get().pollInterval,
+      );
       if (result.status === "ok" && result.data.authenticated) {
-        set({
-          isAuthenticated: true,
-          isLoading: false,
-          username: result.data.username ?? null,
-          avatarUrl: result.data.avatarUrl ?? null,
-          deviceCode: null,
-          userCode: null,
-          verificationUri: null,
-          authError: null,
-        }, undefined, "auth/poll/ok");
+        set(
+          {
+            isAuthenticated: true,
+            isLoading: false,
+            username: result.data.username ?? null,
+            avatarUrl: result.data.avatarUrl ?? null,
+            deviceCode: null,
+            userCode: null,
+            verificationUri: null,
+            authError: null,
+          },
+          undefined,
+          "auth/poll/ok",
+        );
         log.success("auth", `Authenticated as ${result.data.username}`);
         return true;
       }
@@ -138,10 +165,14 @@ export const createAuthSlice: StateCreator<
     } catch (e) {
       log.error("auth", `Sign out error: ${String(e)}`);
     }
-    set({
-      isAuthenticated: false,
-      username: null,
-      avatarUrl: null,
-    }, undefined, "auth/signOut");
+    set(
+      {
+        isAuthenticated: false,
+        username: null,
+        avatarUrl: null,
+      },
+      undefined,
+      "auth/signOut",
+    );
   },
 });

@@ -1,7 +1,7 @@
 import type { StateCreator } from "zustand";
-import type { DiagnosticsStore } from "./index";
 import type { RuleInfo } from "@/bindings";
 import { log } from "@/core/stores/log";
+import type { DiagnosticsStore } from "./index";
 
 export interface RulesSlice {
   rules: RuleInfo[];

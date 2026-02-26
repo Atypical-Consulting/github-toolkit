@@ -1,8 +1,8 @@
+import { AlertTriangle, CheckCircle2, Info, X, XOctagon } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { useShallow } from "zustand/shallow";
-import { useLogStore, type LogEntry } from "@/core/stores/log";
 import { cn } from "@/core/lib/cn";
-import { CheckCircle2, AlertTriangle, XOctagon, Info, X } from "lucide-react";
+import { type LogEntry, useLogStore } from "@/core/stores/log";
 
 const icons = {
   info: Info,

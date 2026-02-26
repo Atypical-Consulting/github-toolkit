@@ -1,5 +1,5 @@
+import { Hexagon, LogOut } from "lucide-react";
 import { useGitHubStore } from "@/core/stores/domain/github";
-import { LogOut, Hexagon } from "lucide-react";
 
 export function Header() {
   const { username, avatarUrl, signOut } = useGitHubStore();

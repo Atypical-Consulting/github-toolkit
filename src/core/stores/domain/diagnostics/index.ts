@@ -1,11 +1,17 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { createScanSlice, type ScanSlice } from "./scan.slice";
+import {
+  createRepoDetailSlice,
+  type RepoDetailSlice,
+} from "./repo-detail.slice";
 import { createResultsSlice, type ResultsSlice } from "./results.slice";
 import { createRulesSlice, type RulesSlice } from "./rules.slice";
-import { createRepoDetailSlice, type RepoDetailSlice } from "./repo-detail.slice";
+import { createScanSlice, type ScanSlice } from "./scan.slice";
 
-export type DiagnosticsStore = ScanSlice & ResultsSlice & RulesSlice & RepoDetailSlice;
+export type DiagnosticsStore = ScanSlice &
+  ResultsSlice &
+  RulesSlice &
+  RepoDetailSlice;
 
 export const useDiagnosticsStore = create<DiagnosticsStore>()(
   devtools(
