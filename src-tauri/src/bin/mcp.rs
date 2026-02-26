@@ -3,6 +3,7 @@
 
 use anyhow::Result;
 use github_automate_lib::mcp::server::GitHubAutomateMcpServer;
+use rmcp::{transport::stdio, ServiceExt};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -19,10 +20,9 @@ async fn main() -> Result<()> {
 
     tracing::info!("github-automate-mcp starting");
 
-    let _server = GitHubAutomateMcpServer::new()?;
-
-    // TODO (Plan 02): Replace with `server.serve(stdio()).await` + `.waiting().await`
-    tracing::info!("github-automate-mcp initialized (no protocol handler yet)");
+    let server = GitHubAutomateMcpServer::new()?;
+    let service = server.serve(stdio()).await?;
+    service.waiting().await?;
 
     Ok(())
 }
