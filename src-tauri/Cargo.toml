@@ -33,7 +33,7 @@ keyring = { version = "3", features = ["apple-native", "windows-native", "sync-s
 chrono = "0.4"
 rusqlite = { version = "0.33", features = ["bundled"] }
 uuid = { version = "1", features = ["v4"] }
-rmcp = { version = "0.16", features = ["server", "transport-io", "macros"] }
+rmcp = { version = "0.17", features = ["server", "transport-io", "macros"] }
 schemars = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
