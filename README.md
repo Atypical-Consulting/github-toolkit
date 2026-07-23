@@ -62,6 +62,22 @@ cd github-toolkit/repo-tools   # or skills / automate / devhub-sync
 Each folder was merged with **full git history preserved** (`git subtree`). The
 original repositories are archived and redirect here.
 
+<!-- portfolio-techstack:start -->
+
+## Tech Stack
+
+- **.NET 10 · .NET 9**
+- MudBlazor
+- Microsoft.TeamFoundationServer.Client
+- Octokit
+- LibGit2Sharp
+- Microsoft.EntityFrameworkCore.Sqlite
+- Microsoft.EntityFrameworkCore.Design
+- Microsoft.EntityFrameworkCore.Tools
+- Spectre.Console
+
+<!-- portfolio-techstack:end -->
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
