@@ -15,6 +15,21 @@
 [![Last commit](https://img.shields.io/github/last-commit/Atypical-Consulting/GitHubAutomate)](https://github.com/Atypical-Consulting/GitHubAutomate/commits)
 <!-- portfolio-badges:end -->
 
+<!-- portfolio-toc:start -->
+
+## Table of Contents
+
+- [Features](#features)
+- [Usage](#usage)
+- [Recommended IDE Setup](#recommended-ide-setup)
+- [Tech Stack](#tech-stack)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+
+<!-- portfolio-toc:end -->
+
+
 
 This template should help get you started developing with Tauri, React and Typescript in Vite.
 
