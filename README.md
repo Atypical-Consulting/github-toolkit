@@ -2,6 +2,21 @@
 
 # GitHub Toolkit
 
+<!-- portfolio-badges:start -->
+<!-- Identity -->
+[![Atypical-Consulting - github-toolkit](https://img.shields.io/static/v1?label=Atypical-Consulting&message=github-toolkit&color=blue&logo=github)](https://github.com/Atypical-Consulting/github-toolkit)
+![Top language](https://img.shields.io/github/languages/top/Atypical-Consulting/github-toolkit)
+[![Stars](https://img.shields.io/github/stars/Atypical-Consulting/github-toolkit?style=social)](https://github.com/Atypical-Consulting/github-toolkit/stargazers)
+[![Forks](https://img.shields.io/github/forks/Atypical-Consulting/github-toolkit?style=social)](https://github.com/Atypical-Consulting/github-toolkit/network/members)
+[![License](https://img.shields.io/github/license/Atypical-Consulting/github-toolkit)](https://github.com/Atypical-Consulting/github-toolkit/blob/HEAD/LICENSE)
+
+<!-- Activity -->
+[![Issues](https://img.shields.io/github/issues/Atypical-Consulting/github-toolkit)](https://github.com/Atypical-Consulting/github-toolkit/issues)
+[![Pull requests](https://img.shields.io/github/issues-pr/Atypical-Consulting/github-toolkit)](https://github.com/Atypical-Consulting/github-toolkit/pulls)
+[![Last commit](https://img.shields.io/github/last-commit/Atypical-Consulting/github-toolkit)](https://github.com/Atypical-Consulting/github-toolkit/commits)
+<!-- portfolio-badges:end -->
+
+
 > Tools for **managing your GitHub repositories at scale** — skills, a desktop app,
 > a Renovate CLI, and a DevOps sync — consolidated in one place (full git history preserved).
 
