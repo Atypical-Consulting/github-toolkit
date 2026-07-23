@@ -239,6 +239,14 @@ GitHubRepoTools/
 
 <!-- portfolio-techstack:end -->
 
+<!-- portfolio-roadmap:start -->
+
+## Roadmap
+
+Planned work and known limitations are tracked in the [open issues](https://github.com/phmatray/GitHubRepoTools/issues). Contributions toward them are welcome.
+
+<!-- portfolio-roadmap:end -->
+
 ## License
 
 MIT
