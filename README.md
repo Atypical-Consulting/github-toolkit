@@ -15,6 +15,26 @@
 [![Last commit](https://img.shields.io/github/last-commit/phmatray/GitHubRepoTools)](https://github.com/phmatray/GitHubRepoTools/commits)
 <!-- portfolio-badges:end -->
 
+<!-- portfolio-toc:start -->
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Creating a GitHub Personal Access Token](#creating-a-github-personal-access-token)
+- [Command Options](#command-options)
+- [Configuration & Cache](#configuration--cache)
+- [Renovate Configuration](#renovate-configuration)
+- [Project Structure](#project-structure)
+- [Dependencies](#dependencies)
+- [Tech Stack](#tech-stack)
+- [License](#license)
+- [Contributing](#contributing)
+
+<!-- portfolio-toc:end -->
+
+
 
 A powerful Spectre CLI tool to manage Renovate configurations across your GitHub repositories.
 
