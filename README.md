@@ -24,6 +24,22 @@ This template should help get you started developing with Tauri, React and Types
 
 ---
 
+<!-- portfolio-techstack:start -->
+
+## Tech Stack
+
+- **TypeScript**
+- @tanstack/react-query
+- @tauri-apps/api
+- @tauri-apps/plugin-dialog
+- @tauri-apps/plugin-opener
+- @tauri-apps/plugin-store
+- @tauri-apps/plugin-window-state
+- class-variance-authority
+- clsx
+
+<!-- portfolio-techstack:end -->
+
 <!-- portfolio-sections:start -->
 
 ## Contributing
