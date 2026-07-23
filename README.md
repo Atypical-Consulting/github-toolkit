@@ -2,6 +2,20 @@
 
 # DevHubSync
 
+<!-- portfolio-badges:start -->
+<!-- Identity -->
+[![phmatray - DevHubSync](https://img.shields.io/static/v1?label=phmatray&message=DevHubSync&color=blue&logo=github)](https://github.com/phmatray/DevHubSync)
+![Top language](https://img.shields.io/github/languages/top/phmatray/DevHubSync)
+[![Stars](https://img.shields.io/github/stars/phmatray/DevHubSync?style=social)](https://github.com/phmatray/DevHubSync/stargazers)
+[![Forks](https://img.shields.io/github/forks/phmatray/DevHubSync?style=social)](https://github.com/phmatray/DevHubSync/network/members)
+
+<!-- Activity -->
+[![Issues](https://img.shields.io/github/issues/phmatray/DevHubSync)](https://github.com/phmatray/DevHubSync/issues)
+[![Pull requests](https://img.shields.io/github/issues-pr/phmatray/DevHubSync)](https://github.com/phmatray/DevHubSync/pulls)
+[![Last commit](https://img.shields.io/github/last-commit/phmatray/DevHubSync)](https://github.com/phmatray/DevHubSync/commits)
+<!-- portfolio-badges:end -->
+
+
 > Synchronize repositories between Azure DevOps and GitHub via a Blazor Server web interface.
 
 ## Description
