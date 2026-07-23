@@ -208,6 +208,17 @@ GitHubRepoTools/
 - [Spectre.Console.Cli](https://spectreconsole.net/) - Command-line framework
 - [Octokit](https://github.com/octokit/octokit.net) - GitHub API client
 
+<!-- portfolio-techstack:start -->
+
+## Tech Stack
+
+- **.NET 9**
+- Octokit
+- Spectre.Console
+- Spectre.Console.Cli
+
+<!-- portfolio-techstack:end -->
+
 ## License
 
 MIT
