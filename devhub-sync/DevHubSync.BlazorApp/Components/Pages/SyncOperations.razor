@@ -1,0 +1,618 @@
+@page "/sync"
+@using DevHubSync.BlazorApp.Models
+@using DevHubSync.BlazorApp.Services
+@using DevHubSync.BlazorApp.Data.Entities
+@using System.Web
+@inject ISyncService SyncService
+@inject IDevOpsService DevOpsService
+@inject IGitHubService GitHubService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@implements IDisposable
+
+<PageTitle>Sync Operations</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Sync Operations</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">New Sync Operation</MudText>
+                <MudSelect T="SyncDirection" Label="Sync Direction" @bind-Value="syncDirection" Variant="Variant.Outlined" Class="mt-4"
+                          Required="true" RequiredError="Please select a sync direction">
+                    <MudSelectItem Value="SyncDirection.DevOpsToGitHub">
+                        <div class="d-flex align-center">
+                            <MudIcon Icon="@Icons.Custom.Brands.MicrosoftAzure" Class="mr-2" Color="Color.Primary" />
+                            <MudText>DevOps</MudText>
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="mx-2" />
+                            <MudIcon Icon="@Icons.Custom.Brands.GitHub" Class="mr-2" Color="Color.Secondary" />
+                            <MudText>GitHub</MudText>
+                        </div>
+                    </MudSelectItem>
+                    <MudSelectItem Value="SyncDirection.GitHubToDevOps">
+                        <div class="d-flex align-center">
+                            <MudIcon Icon="@Icons.Custom.Brands.GitHub" Class="mr-2" Color="Color.Secondary" />
+                            <MudText>GitHub</MudText>
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Class="mx-2" />
+                            <MudIcon Icon="@Icons.Custom.Brands.MicrosoftAzure" Class="mr-2" Color="Color.Primary" />
+                            <MudText>DevOps</MudText>
+                        </div>
+                    </MudSelectItem>
+                </MudSelect>
+                
+                @if (syncDirection == SyncDirection.DevOpsToGitHub)
+                {
+                    <MudAutocomplete T="DevOpsProject" 
+                                   Label="DevOps Project *" 
+                                   @bind-Value="selectedDevOpsProject"
+                                   SearchFunc="SearchDevOpsProjects"
+                                   ToStringFunc="@(p => p?.Name ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false"
+                                   Required="true"
+                                   RequiredError="Please select a DevOps project"
+                                   AdornmentIcon="@Icons.Custom.Brands.MicrosoftAzure"
+                                   AdornmentColor="Color.Primary" />
+                    
+                    <MudAutocomplete T="RepositoryEntity" 
+                                   Label="DevOps Repository *" 
+                                   @bind-Value="selectedDevOpsRepository"
+                                   SearchFunc="SearchDevOpsRepositories"
+                                   ToStringFunc="@(r => r?.Name ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false"
+                                   Disabled="selectedDevOpsProject == null"
+                                   Required="true"
+                                   RequiredError="Please select a DevOps repository"
+                                   HelperText="@GetDevOpsRepoHelperText()">
+                        <ItemTemplate Context="repo">
+                            <div class="d-flex align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Storage" Size="Size.Small" Class="mr-2" />
+                                <div class="flex-grow-1">
+                                    <MudText>@repo.Name</MudText>
+                                    @if (!repo.SyncEnabled)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Warning">Sync not enabled</MudText>
+                                    }
+                                </div>
+                                @if (repo.SyncEnabled)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                                }
+                            </div>
+                        </ItemTemplate>
+                    </MudAutocomplete>
+                    
+                    <MudAutocomplete T="GitHubUser" 
+                                   Label="GitHub Owner *" 
+                                   @bind-Value="selectedGitHubUser"
+                                   SearchFunc="SearchGitHubUsers"
+                                   ToStringFunc="@(u => u?.Username ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false"
+                                   Required="true"
+                                   RequiredError="Please select a GitHub owner"
+                                   AdornmentIcon="@Icons.Custom.Brands.GitHub"
+                                   AdornmentColor="Color.Secondary" />
+                    
+                    <MudTextField @bind-Value="gitHubRepoName" 
+                                Label="GitHub Repository Name (optional)" 
+                                Variant="Variant.Outlined" 
+                                Class="mt-2"
+                                HelperText="Leave empty to use the same name as DevOps repository" />
+                }
+                else
+                {
+                    <MudAutocomplete T="GitHubUser" 
+                                   Label="GitHub Owner" 
+                                   @bind-Value="selectedGitHubUser"
+                                   SearchFunc="SearchGitHubUsers"
+                                   ToStringFunc="@(u => u?.Username ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false" />
+                    
+                    <MudAutocomplete T="RepositoryEntity" 
+                                   Label="GitHub Repository" 
+                                   @bind-Value="selectedGitHubRepository"
+                                   SearchFunc="SearchGitHubRepositories"
+                                   ToStringFunc="@(r => r?.Name ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false"
+                                   Disabled="selectedGitHubUser == null" />
+                    
+                    <MudAutocomplete T="DevOpsProject" 
+                                   Label="DevOps Project" 
+                                   @bind-Value="selectedDevOpsProject"
+                                   SearchFunc="SearchDevOpsProjects"
+                                   ToStringFunc="@(p => p?.Name ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false" />
+                    
+                    <MudAutocomplete T="RepositoryEntity" 
+                                   Label="DevOps Repository" 
+                                   @bind-Value="selectedDevOpsRepository"
+                                   SearchFunc="SearchDevOpsRepositories"
+                                   ToStringFunc="@(r => r?.Name ?? string.Empty)"
+                                   Variant="Variant.Outlined" 
+                                   Class="mt-2"
+                                   ResetValueOnEmptyText="true"
+                                   CoerceText="false"
+                                   Disabled="selectedDevOpsProject == null" />
+                }
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartSync" 
+                          Disabled="@(!CanStartSync() || isSyncing || !AreSyncEnabledRepositoriesSelected())">
+                    @if (isSyncing)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ms-2">Syncing...</MudText>
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Sync" Class="mr-2" />
+                        <MudText>Start Sync</MudText>
+                    }
+                </MudButton>
+                @if (CanStartSync() && !AreSyncEnabledRepositoriesSelected())
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Warning" Class="mt-2">
+                        Enable sync on the selected repositories first
+                    </MudText>
+                }
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+    
+    <MudItem xs="12" md="6">
+        @if (!CanStartSync() && !isSyncing)
+        {
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2" />
+                        Sync Requirements
+                    </MudText>
+                    
+                    <MudList T="string" Dense="true">
+                        @if (syncDirection == SyncDirection.DevOpsToGitHub)
+                        {
+                            <MudListItem T="string" Icon="@(selectedDevOpsProject != null ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
+                                        IconColor="@(selectedDevOpsProject != null ? Color.Success : Color.Default)">
+                                Select a DevOps Project
+                            </MudListItem>
+                            <MudListItem T="string" Icon="@(selectedDevOpsRepository != null ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
+                                        IconColor="@(selectedDevOpsRepository != null ? Color.Success : Color.Default)">
+                                <div class="d-flex align-center justify-space-between flex-grow-1">
+                                    <div>
+                                        Select a DevOps Repository
+                                        @if (selectedDevOpsRepository != null && !selectedDevOpsRepository.SyncEnabled)
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Warning">
+                                                Sync is not enabled for this repository
+                                            </MudText>
+                                        }
+                                    </div>
+                                    @if (selectedDevOpsRepository != null && !selectedDevOpsRepository.SyncEnabled)
+                                    {
+                                        <MudButton Variant="Variant.Text" Color="Color.Warning" Size="Size.Small" 
+                                                  OnClick="@(async () => await EnableSyncForRepository(selectedDevOpsRepository))">
+                                            Enable Sync
+                                        </MudButton>
+                                    }
+                                </div>
+                            </MudListItem>
+                            <MudListItem T="string" Icon="@(selectedGitHubUser != null ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
+                                        IconColor="@(selectedGitHubUser != null ? Color.Success : Color.Default)">
+                                Select a GitHub Owner
+                            </MudListItem>
+                        }
+                        else
+                        {
+                            <MudListItem T="string" Icon="@(selectedGitHubUser != null ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
+                                        IconColor="@(selectedGitHubUser != null ? Color.Success : Color.Default)">
+                                Select a GitHub Owner
+                            </MudListItem>
+                            <MudListItem T="string" Icon="@(selectedGitHubRepository != null ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
+                                        IconColor="@(selectedGitHubRepository != null ? Color.Success : Color.Default)">
+                                <div class="d-flex align-center justify-space-between flex-grow-1">
+                                    <div>
+                                        Select a GitHub Repository
+                                        @if (selectedGitHubRepository != null && !selectedGitHubRepository.SyncEnabled)
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Warning">
+                                                Sync is not enabled for this repository
+                                            </MudText>
+                                        }
+                                    </div>
+                                    @if (selectedGitHubRepository != null && !selectedGitHubRepository.SyncEnabled)
+                                    {
+                                        <MudButton Variant="Variant.Text" Color="Color.Warning" Size="Size.Small" 
+                                                  OnClick="@(async () => await EnableSyncForRepository(selectedGitHubRepository))">
+                                            Enable Sync
+                                        </MudButton>
+                                    }
+                                </div>
+                            </MudListItem>
+                            <MudListItem T="string" Icon="@(selectedDevOpsProject != null ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
+                                        IconColor="@(selectedDevOpsProject != null ? Color.Success : Color.Default)">
+                                Select a DevOps Project
+                            </MudListItem>
+                            <MudListItem T="string" Icon="@(selectedDevOpsRepository != null ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
+                                        IconColor="@(selectedDevOpsRepository != null ? Color.Success : Color.Default)">
+                                Select a DevOps Repository
+                            </MudListItem>
+                        }
+                    </MudList>
+
+                    @if ((selectedDevOpsRepository != null && !selectedDevOpsRepository.SyncEnabled) || 
+                         (selectedGitHubRepository != null && !selectedGitHubRepository.SyncEnabled))
+                    {
+                        <MudAlert Severity="Severity.Warning" Class="mt-3">
+                            <MudText>
+                                The selected repository does not have sync enabled. 
+                                Please enable sync in the <MudLink Href="/repositories">Repositories</MudLink> page first.
+                            </MudText>
+                        </MudAlert>
+                    }
+                </MudCardContent>
+            </MudCard>
+        }
+        else if (currentOperation != null)
+        {
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Current Operation</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2">ID: @currentOperation.Id</MudText>
+                    <MudText Typo="Typo.body2">Direction: @currentOperation.Direction</MudText>
+                    <MudText Typo="Typo.body2">Status: 
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(currentOperation.Status)">
+                            @currentOperation.Status
+                        </MudChip>
+                    </MudText>
+                    @if (!string.IsNullOrEmpty(currentOperation.ErrorMessage))
+                    {
+                        <MudAlert Severity="Severity.Error" Class="mt-2">@currentOperation.ErrorMessage</MudAlert>
+                    }
+                    
+                    <MudText Typo="Typo.h6" Class="mt-4">Logs</MudText>
+                    <MudPaper Class="pa-2 mt-2" Style="max-height: 200px; overflow-y: auto;">
+                        @foreach (var log in currentOperation.Logs)
+                        {
+                            <MudText Typo="Typo.body2" Color="@GetLogColor(log.Level)">
+                                [@log.Timestamp.ToString("HH:mm:ss")] @log.Message
+                            </MudText>
+                        }
+                    </MudPaper>
+                </MudCardContent>
+            </MudCard>
+        }
+    </MudItem>
+</MudGrid>
+
+<MudText Typo="Typo.h5" Class="mt-6 mb-4">Sync History</MudText>
+
+@if (syncHistory.Any())
+{
+    <MudTable Items="@syncHistory" Hover="true" Breakpoint="Breakpoint.Sm">
+        <HeaderContent>
+            <MudTh>Start Time</MudTh>
+            <MudTh>Direction</MudTh>
+            <MudTh>Source</MudTh>
+            <MudTh>Target</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Duration</MudTh>
+            <MudTh>Error</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Start Time">@context.StartTime.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+            <MudTd DataLabel="Direction">@context.Direction</MudTd>
+            <MudTd DataLabel="Source">@context.SourceRepositoryId</MudTd>
+            <MudTd DataLabel="Target">@(context.TargetRepositoryId ?? "N/A")</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
+                    @context.Status
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Duration">
+                @if (context.EndTime.HasValue)
+                {
+                    @((context.EndTime.Value - context.StartTime).ToString(@"mm\:ss"))
+                }
+                else
+                {
+                    <text>-</text>
+                }
+            </MudTd>
+            <MudTd DataLabel="Error">
+                @if (!string.IsNullOrEmpty(context.ErrorMessage))
+                {
+                    <MudTooltip Text="@context.ErrorMessage">
+                        <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                    </MudTooltip>
+                }
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+else
+{
+    <MudAlert Severity="Severity.Info">No sync operations yet.</MudAlert>
+}
+
+@code {
+    private SyncDirection syncDirection = SyncDirection.DevOpsToGitHub;
+    private string gitHubRepoName = string.Empty;
+    private bool isSyncing = false;
+    private SyncOperation? currentOperation;
+    private List<SyncOperation> syncHistory = new();
+    
+    // Autocomplete selected values
+    private DevOpsProject? selectedDevOpsProject;
+    private GitHubUser? selectedGitHubUser;
+    private RepositoryEntity? selectedDevOpsRepository;
+    private RepositoryEntity? selectedGitHubRepository;
+    
+    // Data lists for autocomplete
+    private List<DevOpsProject> devOpsProjects = new();
+    private List<GitHubUser> gitHubUsers = new();
+    private List<RepositoryEntity> devOpsRepositories = new();
+    private List<RepositoryEntity> gitHubRepositories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        SyncService.SyncProgressChanged += OnSyncProgressChanged;
+        await LoadData();
+        await HandleNavigationParameters();
+    }
+
+    private async Task LoadData()
+    {
+        await LoadSyncHistory();
+        devOpsProjects = await SyncService.GetDevOpsProjectsAsync();
+        gitHubUsers = await SyncService.GetGitHubUsersAsync();
+        devOpsRepositories = await SyncService.GetDevOpsRepositoriesAsync();
+        gitHubRepositories = await SyncService.GetGitHubRepositoriesAsync();
+    }
+
+    private async Task LoadSyncHistory()
+    {
+        syncHistory = await SyncService.GetSyncHistoryAsync();
+    }
+
+    private Task<IEnumerable<DevOpsProject>> SearchDevOpsProjects(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(devOpsProjects.AsEnumerable());
+        
+        return Task.FromResult(devOpsProjects.Where(p => p.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)));
+    }
+
+    private Task<IEnumerable<GitHubUser>> SearchGitHubUsers(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(gitHubUsers.AsEnumerable());
+        
+        return Task.FromResult(gitHubUsers.Where(u => u.Username.Contains(value, StringComparison.InvariantCultureIgnoreCase) ||
+                                     u.DisplayName.Contains(value, StringComparison.InvariantCultureIgnoreCase)));
+    }
+
+    private Task<IEnumerable<RepositoryEntity>> SearchDevOpsRepositories(string value, CancellationToken token)
+    {
+        var repos = selectedDevOpsProject != null 
+            ? devOpsRepositories.Where(r => r.DevOpsProjectId == selectedDevOpsProject.Id)
+            : devOpsRepositories;
+        
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(repos.AsEnumerable());
+        
+        return Task.FromResult(repos.Where(r => r.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)));
+    }
+
+    private Task<IEnumerable<RepositoryEntity>> SearchGitHubRepositories(string value, CancellationToken token)
+    {
+        var repos = selectedGitHubUser != null 
+            ? gitHubRepositories.Where(r => r.GitHubUserId == selectedGitHubUser.Id)
+            : gitHubRepositories;
+        
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(repos.AsEnumerable());
+        
+        return Task.FromResult(repos.Where(r => r.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)));
+    }
+
+    private bool CanStartSync()
+    {
+        if (syncDirection == SyncDirection.DevOpsToGitHub)
+        {
+            return selectedDevOpsProject != null && selectedDevOpsRepository != null && selectedGitHubUser != null;
+        }
+        else
+        {
+            return selectedGitHubUser != null && selectedGitHubRepository != null && 
+                   selectedDevOpsProject != null && selectedDevOpsRepository != null;
+        }
+    }
+
+    private async Task StartSync()
+    {
+        if (!CanStartSync()) return;
+        
+        isSyncing = true;
+        
+        try
+        {
+            if (syncDirection == SyncDirection.DevOpsToGitHub)
+            {
+                currentOperation = await SyncService.SyncDevOpsToGitHubAsync(
+                    selectedDevOpsProject!.ProjectId,
+                    selectedDevOpsRepository!.ExternalId,
+                    selectedGitHubUser!.Username,
+                    string.IsNullOrEmpty(gitHubRepoName) ? null : gitHubRepoName
+                );
+            }
+            else
+            {
+                currentOperation = await SyncService.SyncGitHubToDevOpsAsync(
+                    selectedGitHubUser!.Username,
+                    selectedGitHubRepository!.Name,
+                    selectedDevOpsProject!.ProjectId,
+                    selectedDevOpsRepository!.ExternalId
+                );
+            }
+            
+            await LoadSyncHistory();
+            
+            if (currentOperation.Status == SyncOperationStatus.Completed)
+            {
+                Snackbar.Add("Sync completed successfully!", Severity.Success);
+            }
+            else if (currentOperation.Status == SyncOperationStatus.Failed)
+            {
+                Snackbar.Add($"Sync failed: {currentOperation.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to start sync: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSyncing = false;
+        }
+    }
+
+    private async void OnSyncProgressChanged(object? sender, SyncOperation operation)
+    {
+        if (currentOperation?.Id == operation.Id)
+        {
+            // Reload the current operation from the database to get latest logs
+            var updatedOperation = await SyncService.GetSyncOperationAsync(operation.Id);
+            if (updatedOperation != null)
+            {
+                currentOperation = updatedOperation;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private Color GetStatusColor(SyncOperationStatus status) => status switch
+    {
+        SyncOperationStatus.Completed => Color.Success,
+        SyncOperationStatus.Failed => Color.Error,
+        SyncOperationStatus.InProgress => Color.Info,
+        SyncOperationStatus.Cancelled => Color.Warning,
+        _ => Color.Default
+    };
+
+    private Color GetLogColor(LogLevel level) => level switch
+    {
+        LogLevel.Error => Color.Error,
+        LogLevel.Warning => Color.Warning,
+        _ => Color.Default
+    };
+
+    private string GetDevOpsRepoHelperText()
+    {
+        if (selectedDevOpsProject == null)
+            return "Select a project first";
+        
+        var projectRepos = devOpsRepositories.Where(r => r.DevOpsProjectId == selectedDevOpsProject.Id).ToList();
+        var enabledRepos = projectRepos.Where(r => r.SyncEnabled).ToList();
+        
+        if (!projectRepos.Any())
+            return "No repositories found in this project";
+        
+        return $"{enabledRepos.Count} of {projectRepos.Count} repositories have sync enabled";
+    }
+
+    private async Task HandleNavigationParameters()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        
+        var source = query["source"];
+        var repoIdStr = query["repoId"];
+        
+        if (!string.IsNullOrEmpty(source) && !string.IsNullOrEmpty(repoIdStr) && int.TryParse(repoIdStr, out var repoId))
+        {
+            var repository = await SyncService.GetRepositoryAsync(repoId);
+            if (repository != null)
+            {
+                if (repository.Source == RepositorySource.DevOps)
+                {
+                    syncDirection = SyncDirection.DevOpsToGitHub;
+                    selectedDevOpsProject = repository.DevOpsProject;
+                    selectedDevOpsRepository = repository;
+                    
+                    // Pre-select the most likely GitHub user if there's only one
+                    if (gitHubUsers.Count == 1)
+                    {
+                        selectedGitHubUser = gitHubUsers.First();
+                    }
+                }
+                else if (repository.Source == RepositorySource.GitHub)
+                {
+                    syncDirection = SyncDirection.GitHubToDevOps;
+                    selectedGitHubUser = repository.GitHubUser;
+                    selectedGitHubRepository = repository;
+                    
+                    // Pre-select the most likely DevOps project if there's only one
+                    if (devOpsProjects.Count == 1)
+                    {
+                        selectedDevOpsProject = devOpsProjects.First();
+                    }
+                }
+                
+                StateHasChanged();
+                Snackbar.Add($"Pre-selected {repository.Name} for sync", Severity.Info);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        SyncService.SyncProgressChanged -= OnSyncProgressChanged;
+    }
+
+    private async Task EnableSyncForRepository(RepositoryEntity repository)
+    {
+        try
+        {
+            repository.SyncEnabled = true;
+            await SyncService.CreateOrUpdateRepositoryAsync(repository);
+            Snackbar.Add($"Sync enabled for {repository.Name}", Severity.Success);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to enable sync: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private bool AreSyncEnabledRepositoriesSelected()
+    {
+        if (syncDirection == SyncDirection.DevOpsToGitHub)
+        {
+            return selectedDevOpsRepository?.SyncEnabled ?? false;
+        }
+        else
+        {
+            return selectedGitHubRepository?.SyncEnabled ?? false;
+        }
+    }
+}
