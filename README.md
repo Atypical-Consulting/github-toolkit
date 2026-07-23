@@ -2,6 +2,20 @@
 
 # GitHub Repo Tools
 
+<!-- portfolio-badges:start -->
+<!-- Identity -->
+[![phmatray - GitHubRepoTools](https://img.shields.io/static/v1?label=phmatray&message=GitHubRepoTools&color=blue&logo=github)](https://github.com/phmatray/GitHubRepoTools)
+![Top language](https://img.shields.io/github/languages/top/phmatray/GitHubRepoTools)
+[![Stars](https://img.shields.io/github/stars/phmatray/GitHubRepoTools?style=social)](https://github.com/phmatray/GitHubRepoTools/stargazers)
+[![Forks](https://img.shields.io/github/forks/phmatray/GitHubRepoTools?style=social)](https://github.com/phmatray/GitHubRepoTools/network/members)
+
+<!-- Activity -->
+[![Issues](https://img.shields.io/github/issues/phmatray/GitHubRepoTools)](https://github.com/phmatray/GitHubRepoTools/issues)
+[![Pull requests](https://img.shields.io/github/issues-pr/phmatray/GitHubRepoTools)](https://github.com/phmatray/GitHubRepoTools/pulls)
+[![Last commit](https://img.shields.io/github/last-commit/phmatray/GitHubRepoTools)](https://github.com/phmatray/GitHubRepoTools/commits)
+<!-- portfolio-badges:end -->
+
+
 A powerful Spectre CLI tool to manage Renovate configurations across your GitHub repositories.
 
 ## Features
