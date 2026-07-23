@@ -16,6 +16,19 @@
 [![Last commit](https://img.shields.io/github/last-commit/Atypical-Consulting/github-toolkit)](https://github.com/Atypical-Consulting/github-toolkit/commits)
 <!-- portfolio-badges:end -->
 
+<!-- portfolio-toc:start -->
+
+## Table of Contents
+
+- [Tools](#tools)
+- [Features](#features)
+- [Usage](#usage)
+- [History](#history)
+- [License](#license)
+
+<!-- portfolio-toc:end -->
+
+
 
 > Tools for **managing your GitHub repositories at scale** — skills, a desktop app,
 > a Renovate CLI, and a DevOps sync — consolidated in one place (full git history preserved).
