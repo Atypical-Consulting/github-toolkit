@@ -1,3 +1,5 @@
+![github-toolkit banner](.github/banner.png)
+
 # GitHub Toolkit
 
 > Tools for **managing your GitHub repositories at scale** — skills, a desktop app,
