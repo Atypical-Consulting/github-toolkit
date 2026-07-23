@@ -1,0 +1,196 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #11111b;
+  --color-surface-raised: #181825;
+  --color-surface-alt: #1e1e2e;
+  --color-surface-hover: #313244;
+
+  --color-text: #cdd6f4;
+  --color-text-muted: #a6adc8;
+  --color-text-dim: #585b70;
+
+  --color-accent: #89b4fa;
+  --color-accent-hover: #b4d0fb;
+
+  --color-success: #a6e3a1;
+  --color-warning: #f9e2af;
+  --color-error: #f38ba8;
+
+  --color-border: #45475a;
+  --color-border-subtle: #313244;
+
+  --color-lavender: #b4befe;
+  --color-mauve: #cba6f7;
+  --color-peach: #fab387;
+
+  --font-family-display: 'Outfit', system-ui, sans-serif;
+  --font-family-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-family-display);
+  }
+}
+
+@layer base {
+  /* ── Atmospheric background ─────────────────────────── */
+
+  #root::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(
+        ellipse 80% 60% at 10% 0%,
+        rgba(137, 180, 250, 0.06) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 60% 50% at 90% 100%,
+        rgba(203, 166, 247, 0.04) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 50% 40% at 50% 50%,
+        rgba(180, 190, 254, 0.02) 0%,
+        transparent 70%
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #root > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Noise texture overlay ──────────────────────────── */
+
+  #root::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+/* ── Scrollbar ──────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(69, 71, 90, 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(69, 71, 90, 0.7);
+}
+
+/* ── Selection ──────────────────────────────────────── */
+
+::selection {
+  background: rgba(137, 180, 250, 0.25);
+  color: #cdd6f4;
+}
+
+/* ── Animations ─────────────────────────────────────── */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+.stagger-5 {
+  animation-delay: 0.25s;
+}
+
+/* ── Glass surface ──────────────────────────────────── */
+
+.glass {
+  background: rgba(30, 30, 46, 0.5);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border-bottom: 1px solid rgba(69, 71, 90, 0.3);
+}
+
+/* ── Health ring (SVG gauge) ────────────────────────── */
+
+.health-ring {
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.health-ring-track {
+  fill: none;
+  stroke: rgba(69, 71, 90, 0.3);
+  stroke-width: 3;
+}
+
+.health-ring-fill {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 300ms ease-in-out;
+}
+
+/* ── Scan shimmer skeleton ─────────────────────────── */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-raised) 25%,
+    var(--color-surface-hover) 50%,
+    var(--color-surface-raised) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
