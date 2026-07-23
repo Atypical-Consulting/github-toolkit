@@ -1,3 +1,5 @@
+![DevHubSync banner](.github/banner.png)
+
 # DevHubSync
 
 > Synchronize repositories between Azure DevOps and GitHub via a Blazor Server web interface.
