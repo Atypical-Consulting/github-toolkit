@@ -1,3 +1,5 @@
+![GitHubRepoTools banner](.github/banner.png)
+
 # GitHub Repo Tools
 
 A powerful Spectre CLI tool to manage Renovate configurations across your GitHub repositories.
