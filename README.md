@@ -1,3 +1,5 @@
+![GitHubSkills banner](.github/banner.png)
+
 # GitHubSkills
 
 > **Your repos deserve better. GHS fixes them.**
