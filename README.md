@@ -35,6 +35,21 @@ cd DevHubSync
 dotnet run --project DevHubSync.BlazorApp
 ```
 
+<!-- portfolio-techstack:start -->
+
+## Tech Stack
+
+- **.NET 10**
+- MudBlazor
+- Microsoft.TeamFoundationServer.Client
+- Octokit
+- LibGit2Sharp
+- Microsoft.EntityFrameworkCore.Sqlite
+- Microsoft.EntityFrameworkCore.Design
+- Microsoft.EntityFrameworkCore.Tools
+
+<!-- portfolio-techstack:end -->
+
 ## License
 MIT
 
