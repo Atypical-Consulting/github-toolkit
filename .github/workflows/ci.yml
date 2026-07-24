@@ -1,0 +1,33 @@
+# Known non-building subprojects (excluded):
+#   - repo-tools/GitHubRepoTools.sln
+#     GitHubRepoTools.Cli/Commands/EnableRenovateCommand.cs(58,37): error CS0507
+#     "cannot change access modifiers when overriding 'protected' inherited member
+#     AsyncCommand<EnableRenovateCommand.Settings>.ExecuteAsync(...)".
+#     Pre-existing legacy code issue, out of scope for this workflow; fix separately.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        solution:
+          - devhub-sync/DevHubSync.sln
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build ${{ matrix.solution }}
+        run: dotnet build "${{ matrix.solution }}" -c Release
