@@ -57,6 +57,22 @@ git clone https://github.com/Atypical-Consulting/github-toolkit.git
 cd github-toolkit/repo-tools   # or skills / automate / devhub-sync
 ```
 
+### Installing the skills
+
+The 18 `ghs-*` skills ship as a Claude Code plugin. Install them — do not copy the files:
+
+```bash
+/plugin marketplace add Atypical-Consulting/github-toolkit
+/plugin install github-skills@github-toolkit
+```
+
+Cloning the repo only makes the skills available *while working inside `skills/`*, because they
+live in a project-scoped `.claude/skills/` directory. Installing the plugin makes them available
+everywhere, which is the point of a tool that operates on **other** repositories.
+
+Copying them into `~/.claude/skills/` instead would work once and then rot: `~/.claude` is not a
+git repository, so a copy drifts from its source with nothing to signal it.
+
 ## History
 
 Each folder was merged with **full git history preserved** (`git subtree`). The
