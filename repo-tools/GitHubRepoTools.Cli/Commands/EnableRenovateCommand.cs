@@ -55,7 +55,7 @@ public sealed class EnableRenovateCommand : AsyncCommand<EnableRenovateCommand.S
         public bool ClearToken { get; init; }
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
+    protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         try
         {
