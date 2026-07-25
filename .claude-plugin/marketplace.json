@@ -1,0 +1,11 @@
+{
+  "name": "github-toolkit",
+  "owner": { "name": "Atypical Consulting", "email": "philippe@atypical.consulting" },
+  "plugins": [
+    {
+      "name": "github-skills",
+      "source": "./skills/.claude",
+      "description": "18 skills to operate GitHub repositories at scale: backlog scoring, sync and fix, issue triage/analysis/implementation, PR review and merge, releases, repo health scans, project init, and an orchestrator that chains them with human checkpoints and dry-run."
+    }
+  ]
+}
